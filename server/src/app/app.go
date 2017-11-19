@@ -29,6 +29,7 @@ func wkt_response(w http.ResponseWriter, r *http.Request) {
 
 func metadata_response(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Now we need metadata as well")
+	application.database.GetMetadata()
 }
 
 func main() {
