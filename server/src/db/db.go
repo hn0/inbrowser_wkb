@@ -40,19 +40,55 @@ func GetConn(file string) *DB {
 
 func (db *DB) GetMetadata() {
 	// defer db.conn.Close()
-	names := []string{"ogc_fid", "statefp", "countryfp"}
+	names := []string{"ogc_fid", "statefp"}
 	fields := model.CreateFields(names)
 
-	fmt.Println(fields)
-	fmt.Println(fields.GetColumns(", "))
-	// db.execQuery(fields)
+	if cnt := db.execSelect(fields); cnt >= 0 {
+		fmt.Println(fields)
+	}
 }
 
-// func (db *DB) execQuery(fields []string) {
-// 	q := fmt.Sprintf("SELECT %s FROM %s", strings.Join(fields, ","), db.table)
-// 	fmt.Println(q)
-// 	fmt.Println("continue with execution of the query!@")
-// }
+func (db *DB) execSelect(fields *model.Fields) int {
+	defer db.conn.Close()
+
+	if err := db.conn.Ping(); err != nil {
+		if conn, err2 := sql.Open("sqlite3", db.file); err2 == nil {
+			db.conn = conn
+		} else {
+			return -2
+		}
+	}
+
+	cnt := 0
+	q := fmt.Sprintf("SELECT %s FROM %s", fields.GetColumns(", "), db.table)
+	fmt.Println(q)
+
+	// second argument are array of values for constraint condition
+	if rows, err := db.conn.Query(q, nil); err == nil {
+		defer rows.Close()
+		if coltyps, err := rows.ColumnTypes(); err == nil && len(coltyps) > 0 {
+
+			fmt.Println(coltyps)
+
+			for rows.Next() {
+				// todo: retrivie interface from the model
+				rowvals := make([]interface{}, 3)
+				for i := range rowvals {
+					var v interface{}
+					rowvals[i] = &v
+				}
+				if err := rows.Scan(rowvals...); err == nil {
+					cnt = cnt + 1
+				}
+			}
+			return cnt
+		}
+	} else {
+		fmt.Println(err)
+	}
+
+	return -1
+}
 
 func (db *DB) GetSource() string {
 	return db.file
