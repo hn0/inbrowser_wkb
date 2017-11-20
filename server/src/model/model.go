@@ -9,11 +9,10 @@ type Field struct {
 	Name string
 	Typ  reflect.Kind
 	// values can be map of Typ (holding all column values!)
-	Vals *Values
+	Vals []interface{}
 }
 
 type Fields []Field
-type Values []interface{}
 
 func CreateFields(names []string) *Fields {
 
@@ -21,12 +20,11 @@ func CreateFields(names []string) *Fields {
 	f = make([]Field, len(names))
 
 	for i, v := range names {
-		var vals Values
-		vals = make([]interface{}, len(names))
+		var vals []interface{}
 		f[i] = Field{
 			v,
-			0,
-			&vals,
+			reflect.Invalid,
+			vals,
 		}
 	}
 
@@ -44,15 +42,13 @@ func (f *Fields) GetColumns(join string) string {
 	return strings.Join(cols, join)
 }
 
-// func (f *Fields) GetValues() []interface{} {
-// acctually needed interface array for the row!?
-// var vals []interface{}
-// vals = make([]interface{}, len(*f))
-// for i, _ := range *f {
+func (f *Fields) SetKind(index int, kind reflect.Kind) {
+	(*f)[index].Typ = kind
+}
 
-//        todo create map for the intrface values!
-
-// 	f[i].Values = vals[i]
-// }
-// return vals
-// }
+func (f *Fields) AddRow(values []interface{}) {
+	for i, _ := range values {
+		v := (*f)[i].Vals
+		(*f)[i].Vals = append(v, values[i])
+	}
+}

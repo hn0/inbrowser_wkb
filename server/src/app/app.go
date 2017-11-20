@@ -29,7 +29,20 @@ func wkt_response(w http.ResponseWriter, r *http.Request) {
 
 func metadata_response(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Now we need metadata as well")
-	application.database.GetMetadata()
+	cnt, model := application.database.GetMetadata()
+	if cnt != 0 {
+		cnt = 1
+
+	}
+
+	// close_request([]interface{"error"}, w)
+	// var resp []interface{}
+	// resp = make([]interface{}, cnt)
+	//   should go something like this!?
+}
+
+func close_request(values []interface{}, w http.ResponseWriter) {
+	// TODO: return a simple json response?!
 }
 
 func main() {
