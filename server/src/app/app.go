@@ -2,6 +2,7 @@ package main
 
 import (
 	"db"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -28,21 +29,26 @@ func wkt_response(w http.ResponseWriter, r *http.Request) {
 }
 
 func metadata_response(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Now we need metadata as well")
 	cnt, model := application.database.GetMetadata()
-	if cnt != 0 {
-		cnt = 1
-
+	var resp []interface{}
+	if cnt == 0 {
+		resp = make([]interface{}, 1)
+		resp[0] = map[string]string{"error": "No records found!"}
+	} else {
+		resp = make([]interface{}, cnt)
+		for i, _ := range resp {
+			resp[i] = model.GetRecord(i)
+		}
 	}
-
-	// close_request([]interface{"error"}, w)
-	// var resp []interface{}
-	// resp = make([]interface{}, cnt)
-	//   should go something like this!?
+	close_request(resp, w)
 }
 
 func close_request(values []interface{}, w http.ResponseWriter) {
-	// TODO: return a simple json response?!
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+	json.NewEncoder(w).Encode(values)
 }
 
 func main() {

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -51,4 +52,20 @@ func (f *Fields) AddRow(values []interface{}) {
 		v := (*f)[i].Vals
 		(*f)[i].Vals = append(v, values[i])
 	}
+}
+
+func (f *Fields) GetRecord(i int) map[string]interface{} {
+	var ret map[string]interface{}
+	ret = make(map[string]interface{}, len(*f))
+	for _, fl := range *f {
+		if fl.Typ == reflect.Int64 {
+			ret[fl.Name] = fl.Vals[i]
+		} else if fl.Typ == reflect.String && fl.Vals[i] != nil {
+			v := fl.Vals[i].(*interface{})
+			ret[fl.Name] = fmt.Sprintf("%s", *v)
+		} else {
+			ret[fl.Name] = nil
+		}
+	}
+	return ret
 }
