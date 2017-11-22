@@ -2,11 +2,14 @@ package main
 
 import (
 	"db"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 )
 
 type app struct {
@@ -26,12 +29,30 @@ func hello_response(w http.ResponseWriter, r *http.Request) {
 }
 
 func wkb_response(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Now we need a sample data!")
+	now := time.Now()
 	cnt, model := application.database.GetGeometry()
+	var data []byte
+	data = make([]byte, cnt*4+model.SizeOf())
 
-	// alignment will be next step
-	fmt.Println(model.GetRecord(0))
-	fmt.Println(cnt)
+	pos := 0
+	for i := 0; i < cnt; i++ {
+		r := model.GetRecord(i)
+		binary.LittleEndian.PutUint32(data[pos:pos+4], uint32((*(r["ogc_fid"]).(*interface{})).(int64)))
+		pos += 4
+		geom := r["GEOMETRY"].([]byte)
+		l := len(geom)
+		binary.LittleEndian.PutUint32(data[pos:pos+4], uint32(l))
+		pos += 4
+		copy(data[pos:pos+l], geom)
+		pos += l
+	}
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	binary.Write(w, binary.LittleEndian, data)
+
+	fmt.Printf("Binary request took %d ms\n", time.Now().Sub(now)/1000)
 }
 
 func wkt_response(w http.ResponseWriter, r *http.Request) {

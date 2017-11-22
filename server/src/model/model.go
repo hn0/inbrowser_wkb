@@ -11,8 +11,8 @@ type Field struct {
 	Typ  reflect.Kind
 	// values can be map of Typ (holding all column values!)
 	Vals []interface{}
-	// sizes in bytes!
-	sizes []int
+	// sizes in bytes! aggregate will do for now
+	size int
 }
 
 type Fields []Field
@@ -24,13 +24,11 @@ func CreateFields(names []string) *Fields {
 
 	for i, v := range names {
 		var vals []interface{}
-		var szs []int
-		szs = make([]int, len(names))
 		f[i] = Field{
 			v,
 			reflect.Invalid,
 			vals,
-			szs,
+			0,
 		}
 	}
 
@@ -55,7 +53,6 @@ func (f *Fields) SetKind(index int, kind reflect.Kind) {
 func (f *Fields) AddRow(values []interface{}) {
 	for i, _ := range values {
 		v := (*f)[i].Vals
-		s := (*f)[i].sizes
 
 		// ok, cannot access bytes so easily
 		//  we need to detect blob type!
@@ -63,6 +60,9 @@ func (f *Fields) AddRow(values []interface{}) {
 		v2 := values[i].(*interface{})
 		if (*f)[i].Typ == reflect.Array {
 			sz = len((*v2).([]byte))
+		} else if (*f)[i].Typ == reflect.Int64 {
+			// for demo, id will be truncated
+			sz = 8
 		} else {
 			sz = int(reflect.TypeOf(v2).Size())
 		}
@@ -70,7 +70,7 @@ func (f *Fields) AddRow(values []interface{}) {
 		// fmt.Println(sz)
 
 		(*f)[i].Vals = append(v, values[i])
-		(*f)[i].sizes = append(s, sz)
+		(*f)[i].size += sz
 	}
 }
 
@@ -91,4 +91,13 @@ func (f *Fields) GetRecord(i int) map[string]interface{} {
 		}
 	}
 	return ret
+}
+
+func (f *Fields) SizeOf() int {
+	var sz int
+	sz = 0
+	for _, v := range *f {
+		sz += v.size
+	}
+	return sz
 }
