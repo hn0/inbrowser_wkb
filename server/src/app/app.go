@@ -16,12 +16,22 @@ type app struct {
 var application *app
 
 func hello_response(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Hello world, this machine has become now a server!")
-	fmt.Fprintln(w, "Serving sample data: "+application.database.GetSource())
+	var resp []interface{}
+	resp = make([]interface{}, 1)
+	resp[0] = map[string]string{
+		"message":       "Hello world, this machine has become now a server!",
+		"sample source": application.database.GetSource(),
+	}
+	close_request_json(resp, w)
 }
 
 func wkb_response(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Now we need a sample data!")
+	cnt, model := application.database.GetGeometry()
+
+	// alignment will be next step
+	fmt.Println(model.GetRecord(0))
+	fmt.Println(cnt)
 }
 
 func wkt_response(w http.ResponseWriter, r *http.Request) {
@@ -40,10 +50,10 @@ func metadata_response(w http.ResponseWriter, r *http.Request) {
 			resp[i] = model.GetRecord(i)
 		}
 	}
-	close_request(resp, w)
+	close_request_json(resp, w)
 }
 
-func close_request(values []interface{}, w http.ResponseWriter) {
+func close_request_json(values []interface{}, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Pragma", "no-cache")

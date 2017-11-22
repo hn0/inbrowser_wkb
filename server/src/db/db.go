@@ -40,14 +40,19 @@ func GetConn(file string) *DB {
 	return nil
 }
 
+func (db *DB) GetGeometry() (int, *model.Fields) {
+	names := []string{"ogc_fid", "GEOMETRY"}
+	fields := model.CreateFields(names)
+	cnt := db.execSelect(fields)
+	return cnt, fields
+}
+
 func (db *DB) GetMetadata() (int, *model.Fields) {
 	names := []string{"ogc_fid", "statefp"}
 	fields := model.CreateFields(names)
 	cnt := db.execSelect(fields)
 	return cnt, fields
 }
-
-// func (db *DB) GetGeometry() (int, *model.Fields) {
 
 func (db *DB) execSelect(fields *model.Fields) int {
 	defer db.conn.Close()
@@ -81,6 +86,8 @@ func (db *DB) execSelect(fields *model.Fields) int {
 					k = reflect.Float32
 				case "text", "varchar":
 					k = reflect.String
+				case "blob":
+					k = reflect.Array
 				default:
 					k = reflect.Interface
 				}
