@@ -52,7 +52,7 @@ func wkb_response(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	binary.Write(w, binary.LittleEndian, data)
 
-	fmt.Printf("Binary request took %d ms\n", time.Now().Sub(now)/1000)
+	fmt.Printf("Binary request took %d ms (%d records delivered; content-length: %d)\n", time.Now().Sub(now)/1000, cnt, len(data))
 }
 
 func wkt_response(w http.ResponseWriter, r *http.Request) {

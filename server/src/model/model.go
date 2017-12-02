@@ -6,13 +6,20 @@ import (
 	"strings"
 )
 
+type Filter struct {
+	Field    string
+	Relation string
+	Value    interface{}
+}
+
 type Field struct {
 	Name string
 	Typ  reflect.Kind
 	// values can be map of Typ (holding all column values!)
 	Vals []interface{}
 	// sizes in bytes! aggregate will do for now
-	size int
+	size        int
+	constraints []Filter
 }
 
 type Fields []Field
@@ -24,15 +31,22 @@ func CreateFields(names []string) *Fields {
 
 	for i, v := range names {
 		var vals []interface{}
+		var con []Filter
 		f[i] = Field{
 			v,
 			reflect.Invalid,
 			vals,
 			0,
+			con,
 		}
 	}
 
 	return &f
+}
+
+func (f *Field) AddConstraint(column string, relation string, value interface{}) {
+	c := Filter{column, relation, value}
+	f.constraints = append(f.constraints, c)
 }
 
 func (f *Fields) GetColumns(join string) string {
@@ -44,6 +58,30 @@ func (f *Fields) GetColumns(join string) string {
 	}
 
 	return strings.Join(cols, join)
+}
+
+func (f *Fields) GetConstraints() string {
+	var cond string
+
+	for _, f := range *f {
+		for _, c := range f.constraints {
+			// current support is for AND only, after all this is just a proof of concept
+			if len(cond) > 0 {
+				cond = " AND " + cond
+			}
+			// TODO: support for other types of values is missing (current support is only for numeric types)
+			cond = fmt.Sprintf("%s %s %s %d",
+				cond,
+				c.Field,
+				c.Relation,
+				c.Value)
+		}
+	}
+
+	if len(cond) > 0 {
+		return " WHERE " + cond
+	}
+	return ";"
 }
 
 func (f *Fields) SetKind(index int, kind reflect.Kind) {
