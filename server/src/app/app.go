@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"db"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	_ "github.com/devork/geom"
+	"github.com/devork/geom/ewkb"
 	"log"
 	"net/http"
 	"os"
@@ -67,12 +70,18 @@ func wkt_response(w http.ResponseWriter, r *http.Request) {
 		for i, _ := range resp {
 			r := model.GetRecord(i)
 			// read the geometry!
+			var wkt string = ""
+			reader := bytes.NewReader(r["GEOMETRY"].([]byte))
+			if g, err := ewkb.Decode(reader); err == nil {
+				// TODO: construct wkt string!
+				wkt = g.Type()
+			}
 			resp[i] = struct {
 				Id  string
 				WKT string
 			}{
 				strconv.FormatInt((*(r["ogc_fid"].(*interface{}))).(int64), 12),
-				"not yet here",
+				wkt,
 			}
 		}
 	}
