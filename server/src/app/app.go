@@ -52,11 +52,32 @@ func wkb_response(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	binary.Write(w, binary.LittleEndian, data)
 
-	fmt.Printf("Binary request took %d ms (%d records delivered; content-length: %d)\n", time.Now().Sub(now)/1000, cnt, len(data))
+	fmt.Printf("Binary request took %d ms (%d records delivered; content-length: %d)\n", time.Now().Sub(now)/100000, cnt, len(data))
 }
 
 func wkt_response(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Now we need wkt as well")
+	now := time.Now()
+	cnt, model := application.database.GetGeometry()
+	var resp []interface{}
+	if cnt == 0 {
+		resp = make([]interface{}, 1)
+		resp[0] = map[string]string{"error": "No records found!"}
+	} else {
+		resp = make([]interface{}, cnt)
+		for i, _ := range resp {
+			r := model.GetRecord(i)
+			// read the geometry!
+			resp[i] = struct {
+				Id  string
+				WKT string
+			}{
+				strconv.FormatInt((*(r["ogc_fid"].(*interface{}))).(int64), 12),
+				"not yet here",
+			}
+		}
+	}
+	close_request_json(resp, w)
+	fmt.Printf("Text request took %d ms (%d records delivered;)\n", time.Now().Sub(now)/100000, cnt)
 }
 
 func metadata_response(w http.ResponseWriter, r *http.Request) {
