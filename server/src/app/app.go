@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"db"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	_ "github.com/devork/geom"
-	"github.com/devork/geom/ewkb"
+	"github.com/lukeroth/gdal"
 	"log"
 	"net/http"
 	"os"
@@ -70,12 +68,14 @@ func wkt_response(w http.ResponseWriter, r *http.Request) {
 		for i, _ := range resp {
 			r := model.GetRecord(i)
 			// read the geometry!
-			var wkt string = ""
-			reader := bytes.NewReader(r["GEOMETRY"].([]byte))
-			if g, err := ewkb.Decode(reader); err == nil {
-				// TODO: construct wkt string!
-				wkt = g.Type()
+			var wkt string = "POINT EMPTY"
+
+			ref := new(gdal.SpatialReference)
+			b := r["GEOMETRY"].([]uint8)
+			if geo, err := gdal.CreateFromWKB(b, *ref, len(b)); err == nil {
+				wkt, _ = geo.ToWKT()
 			}
+
 			resp[i] = struct {
 				Id  string
 				WKT string
@@ -86,7 +86,8 @@ func wkt_response(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	close_request_json(resp, w)
-	fmt.Printf("Text request took %d ms (%d records delivered;)\n", time.Now().Sub(now)/100000, cnt)
+	tmp, _ := json.Marshal(resp)
+	fmt.Printf("Text request took %d ms (%d records delivered; content-length: %d)\n", time.Now().Sub(now)/100000, cnt, len(tmp))
 }
 
 func metadata_response(w http.ResponseWriter, r *http.Request) {

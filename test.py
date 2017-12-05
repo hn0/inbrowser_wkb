@@ -63,8 +63,19 @@ def test_wkt():
     print( 'Testing wkt geometry type' )
     start = time.time()
     with urllib.request.urlopen( SERVER + "/wkt" ) as fp:
-        print( fp.read() )
-    raise Exception( 'Not implemented yet exception' )
+        res = json.load( fp )
+        if not type( res ) is list:
+            raise Exception( 'Unexpected type, got:', str( type( res) ) )
+    
+    geocnt    = 0
+    recordcnt = 0
+    for r in res:
+        recordcnt += 1
+        geo = ogr.CreateGeometryFromWkt( r['WKT'] )
+        if geo.IsValid() and not geo.IsEmpty():
+            geocnt += 1
+
+    print( 'Got {} records from which {} geometries is valid'.format( recordcnt, geocnt ) )
     print( 'WKT test done successfully, exec time: {}'.format( round( time.time() - start, 5) * 10000 ) )
 
 
