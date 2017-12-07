@@ -29,10 +29,14 @@
 
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ol3/4.6.1/ol.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.4/proj4.js"></script>
     <script type="text/javascript" src="js/mapctl.js"></script>
 
     <script type="text/javascript">
         var init = function(timeout) {
+
+            // proj4 def should be automatized!
+
             if( !window.mapctl ){
                 alert( 'something went wrong :( please refresh the page' );
                 return;

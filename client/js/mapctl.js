@@ -2,8 +2,10 @@
     
 
     mapctl   = function(){
-        this.server   = 'http://localhost:8000/';
-        this.requests = { 'wkb': null, 'wkt': null };
+        this.server    = 'http://localhost:8000/';
+        this.requests  = { 'wkb': null, 'wkt': null };
+        this.data_proj = 'EPSG:3857';
+        this.map_proj  = 'EPSG:4326';
     };
 
     mapctl.prototype.show_map = function( target, type ){
@@ -26,12 +28,12 @@
 
 
                         // now parsing of the data
-                        // var features = this['parse' + type]( xhr.response );
-                        console.log( xhr.response )
+                        var features = this['parse' + type]( xhr.response );
 
+                        console.log( features )
                         this.requests[type] = null;
 
-                    })
+                    }.bind( this ))
                     .catch(function(ex) { console.log('error call', ex); })
                     .then(function() { console.log('finally call'); })
 
@@ -47,25 +49,37 @@
 
     };
 
-    mapctl.prototype.init_map = function( container ){
+    mapctl.prototype.init_map = function( container, features ){
         var map = new ol.Map({
             target: container,
             layers: [ new ol.layer.Tile({ source: new ol.source.OSM() }) ]
         });
-
         return map;
     };
 
     mapctl.prototype.parsewkt = function( data ){
+        data = JSON.parse( data );
         var ret = [];
+        var format = new ol.format.WKT();
 
-        console.log( data )
+        _.forEach( data, function(record){
+            var f = format.readFeature( record.WKT , {
+                dataProjection: this.data_proj,
+                featureProjection: this.map_proj
+            } );
+            f.setProperties( {id: record.ID} );
+            ret.push( f );
+        });
 
         return ret;
     };
 
     mapctl.prototype.parsewkb = function( data ){
         var ret = [];
+
+        // let start with parsing, at least to get projection info
+        // how js is storing chars (8 bit uint -> but check is needed!)
+        console.log( data.charCodeAt(0), data.charCodeAt(4), data.charCodeAt(5) );
 
         return ret;
     };
