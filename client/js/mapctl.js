@@ -17,10 +17,23 @@
                 timer[0].innerHTML  = '';
                 mapdiv[0].innerHTML = '';
 
-                var map = this.init_map( mapdiv[0] );
+                // // this would be better suited for finally call!?
+                // var map = this.init_map( mapdiv[0] );
 
                 this.requests[type] = performance.now();
-                this.get_data( this.server + type );
+                this.get_data( this.server + type )
+                    .then(function( xhr ) { 
+
+
+                        // now parsing of the data
+                        // var features = this['parse' + type]( xhr.response );
+                        console.log( xhr.response )
+
+                        this.requests[type] = null;
+
+                    })
+                    .catch(function(ex) { console.log('error call', ex); })
+                    .then(function() { console.log('finally call'); })
 
             }
             else {
@@ -43,11 +56,37 @@
         return map;
     };
 
-    mapctl.prototype.get_data = function( url ) {
-        var req = new XMLHttpRequest();
+    mapctl.prototype.parsewkt = function( data ){
+        var ret = [];
 
-        req.open( "GET", url, true );
-        req.send();
+        console.log( data )
+
+        return ret;
+    };
+
+    mapctl.prototype.parsewkb = function( data ){
+        var ret = [];
+
+        return ret;
+    };
+
+    mapctl.prototype.get_data = function( url ) {
+        return new Promise( (success, error) => {
+            
+            var req = new XMLHttpRequest();
+
+            req.onload  = () => success( req );
+            req.onerror = () => error( null );
+
+            try{
+                req.open( "GET", url, true );
+                req.send();
+            }
+            catch (ex){
+                error( ex );
+            }
+
+        });
     };
 
     mapctl.prototype.log = function( message ) {

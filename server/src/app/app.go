@@ -51,6 +51,7 @@ func wkb_response(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	binary.Write(w, binary.LittleEndian, data)
 
 	fmt.Printf("Binary request took %d ms (%d records delivered; content-length: %d)\n", time.Now().Sub(now)/100000, cnt, len(data))
@@ -110,6 +111,7 @@ func close_request_json(values []interface{}, w http.ResponseWriter) {
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Expires", "0")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(values)
 }
 
