@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WKB poc showcase page</title>
+
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/ol3/4.6.1/ol.css">
+    <style type="text/css">
+        body, #wrapper {
+            width: 100%
+        }
+        #wrapper{
+            margin: auto 10px;
+        }
+        .mapcontainer{
+            width: 40%;
+            height: 400px;
+            text-align: center;
+            float: left;
+        }
+        #results{
+            clear: both;
+        }
+    </style>
+
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ol3/4.6.1/ol.js"></script>
+
+    <script type="text/javascript">
+        var init = function(timeout) {
+            if( isNaN( timeout ) ) timeout = 0;
+
+            // check for the main function, that remains to be written
+            alert('now map can be initialized');
+        }
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+</head>
+<body>
+
+    <div id="wrapper">
+    
+        <div id="mapwkb" class="mapcontainer">
+            <h2>WKB driven map</h2>
+            <div class="map"></div>
+            <input type="button" value="start ..." class="start" />
+        </div>
+
+        <div id="mapwkt" class="mapcontainer">
+            <h2>WKT driven map</h2>
+            <div class="map"></div>
+            <input type="button" value="start ..." class="start" />
+        </div>
+
+        <div id="results">
+            <h2>Results:</h2>
+            <ul></ul>
+        </div>
+
+    </div>
+
+</body>
+</html>
