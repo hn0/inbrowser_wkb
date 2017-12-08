@@ -42,18 +42,27 @@
                 return;
             }
 
-            // add necessary event listeners
-            ['wkb', 'wkt'].forEach( function(type){
-                var container = document.getElementById( 'map' + type );
-                if( container ){
-                    _.each( container.getElementsByTagName( 'input' ), 
-                            function( inp ) {
-                               inp.addEventListener( 'click', function() {
-                                window.mapctl.show_map( container, type );
-                               });
-                            });
-                }
-            });
+            // config ( map info ) data is needed first
+            var req = new XMLHttpRequest();
+
+            req.onload  = () => {
+                console.log( req.responseText );
+                // add necessary event listeners
+                ['wkb', 'wkt'].forEach( function(type){
+                    var container = document.getElementById( 'map' + type );
+                    if( container ){
+                        _.each( container.getElementsByTagName( 'input' ), 
+                                function( inp ) {
+                                   inp.addEventListener( 'click', function() {
+                                    window.mapctl.show_map( container, type );
+                                   });
+                                });
+                    }
+                });
+            };
+
+            req.open( "GET", window.mapctl.server + 'geo', true );
+            req.send();
         }
         document.addEventListener('DOMContentLoaded', init);
     </script>

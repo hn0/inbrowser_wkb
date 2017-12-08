@@ -79,11 +79,24 @@ def test_wkt():
     print( 'WKT test done successfully, exec time: {}'.format( round( time.time() - start, 5) * 10000 ) )
 
 
+def test_info():
+    """
+        A simple test that will validate correct ( at least expected any ) srs definition!
+    """
+    print( 'Testing info on geometry' )
+    with urllib.request.urlopen( SERVER + "/geo" ) as fp:
+        res = json.load( fp )
+        print( res[0] )
+
+    print( 'Geo info request done!' )
+
 if __name__ == '__main__':
     try:
         test_server()
+        test_info()
         test_wkb()
         test_wkt()
+        # TODO: test metadata
     except Exception as ex:
         print( 'Test failed!' )
         print( ex )

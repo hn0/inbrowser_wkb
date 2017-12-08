@@ -106,6 +106,21 @@ func metadata_response(w http.ResponseWriter, r *http.Request) {
 	close_request_json(resp, w)
 }
 
+func info_response(w http.ResponseWriter, r *http.Request) {
+	var resp []interface{}
+	resp = make([]interface{}, 1)
+	resp[0] = struct {
+		Geomcnt int
+		EPSG    int
+		WKTproj string
+	}{
+		0,
+		-1,
+		"NOT IMPLEMENTED YET",
+	}
+	close_request_json(resp, w)
+}
+
 func close_request_json(values []interface{}, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -129,6 +144,7 @@ func main() {
 	http.HandleFunc("/wkb", wkb_response)
 	http.HandleFunc("/wkt", wkt_response)
 	http.HandleFunc("/metadata", metadata_response)
+	http.HandleFunc("/geo", info_response)
 	http.HandleFunc("/", hello_response)
 	http.ListenAndServe(":8000", nil)
 	fmt.Println("up and running")

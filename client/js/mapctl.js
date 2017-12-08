@@ -75,11 +75,36 @@
     };
 
     mapctl.prototype.parsewkb = function( data ){
-        var ret = [];
+        var ret       = [];
+        var rreader   = new FileReader();
+        var wktreader = new FileReader();
+        var db        = new Blob( [data], { type: 'octet/stream' } );
+        var i         = 8;
 
-        // let start with parsing, at least to get projection info
-        // how js is storing chars (8 bit uint -> but check is needed!)
-        console.log( data.charCodeAt(0), data.charCodeAt(4), data.charCodeAt(5) );
+        wktreader.onload = () => {
+            // wkb has structure of??!
+            var a = new Int32Array( wktreader.result );
+            console.log( a[0].toString(2) );
+        }
+
+        rreader.onload = () => { 
+            var a = new Uint32Array( rreader.result );
+
+            // char? 8 bytes
+            console.log( a );
+
+            wktreader.readAsArrayBuffer( db.slice( i, i + 32 ) );
+
+            // offset?!
+            // i += a[1]
+            // if( i < db.size ){
+            //     rreader.readAsArrayBuffer( db.slice( i, (i+8) ) );
+            // }
+        };
+
+        rreader.readAsArrayBuffer( db.slice( i-8, i ) );
+        // while i -->
+
 
         return ret;
     };
