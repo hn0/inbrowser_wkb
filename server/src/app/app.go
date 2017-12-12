@@ -9,12 +9,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"strconv"
 	"time"
 )
 
 type app struct {
-	database *db.DB
+	database    *db.DB
+	gdalsrs_bin string
 }
 
 var application *app
@@ -112,11 +114,11 @@ func info_response(w http.ResponseWriter, r *http.Request) {
 	resp[0] = struct {
 		Geomcnt int
 		EPSG    int
-		WKTproj string
+		Proj    string
 	}{
 		0,
-		-1,
-		"NOT IMPLEMENTED YET",
+		application.GetEPSGCode(),
+		application.GetDSProjection(),
 	}
 	close_request_json(resp, w)
 }
@@ -130,6 +132,35 @@ func close_request_json(values []interface{}, w http.ResponseWriter) {
 	json.NewEncoder(w).Encode(values)
 }
 
+// helper functions
+
+// returns proj4js datasource projection
+func (a *app) GetDSProjection() string {
+	opts := []string{"-o", "proj4", a.database.GetSource()}
+	if out, err := exec.Command(a.gdalsrs_bin, opts...).Output(); err == nil {
+		return string(out)
+	} else {
+		fmt.Println(err)
+	}
+	return "-"
+}
+
+// gives its best to extract epsg code
+func (a *app) GetEPSGCode() int {
+
+	if proj := a.GetDSProjection(); len(proj) > 1 {
+		fmt.Println("epsg code extraction still doesn't work!")
+		opts := []string{"-o", "wkt", proj}
+		if out, err := exec.Command(a.gdalsrs_bin, opts...).Output(); err == nil {
+			fmt.Println(out)
+		} else {
+			fmt.Println(err)
+		}
+	}
+
+	return -1
+}
+
 func main() {
 
 	if len(os.Args) != 2 {
@@ -137,6 +168,7 @@ func main() {
 	}
 
 	application = new(app)
+	application.gdalsrs_bin = "/usr/bin/gdalsrsinfo"
 	if application.database = db.GetConn(os.Args[1]); application.database == nil {
 		log.Fatal("Could not connect to sample database! Exiting ...")
 	}

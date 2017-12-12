@@ -49,7 +49,7 @@ func (db *DB) GetGeometry() (int, *model.Fields) {
 }
 
 func (db *DB) GetMetadata() (int, *model.Fields) {
-	names := []string{"ogc_fid", "statefp"}
+	names := []string{"ogc_fid", "eco_id_u"}
 	fields := model.CreateFields(names)
 	cnt := db.execSelect(fields)
 	return cnt, fields
@@ -117,5 +117,8 @@ func (db *DB) execSelect(fields *model.Fields) int {
 }
 
 func (db *DB) GetSource() string {
+	if p, err := filepath.Abs(db.file); err == nil {
+		return p
+	}
 	return db.file
 }
