@@ -17,6 +17,6 @@ fi
 cd $SERVER_PATH
 echo "Starting server ..."
 
-go run src/app/app.go
+go run src/app/app.go ../data/sample_data.sqlite
 
 # echo "Server running"

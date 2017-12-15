@@ -125,7 +125,7 @@ func (f *Fields) GetRecord(i int) map[string]interface{} {
 			v := fl.Vals[i].(*interface{})
 			ret[fl.Name] = (*v).([]byte)
 		} else {
-			ret[fl.Name] = nil
+			ret[fl.Name] = fl.Vals[i].(*interface{})
 		}
 	}
 	return ret

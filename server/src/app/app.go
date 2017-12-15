@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -112,11 +113,11 @@ func info_response(w http.ResponseWriter, r *http.Request) {
 	var resp []interface{}
 	resp = make([]interface{}, 1)
 	resp[0] = struct {
-		Geomcnt int
+		Geomcnt int64
 		EPSG    int
 		Proj    string
 	}{
-		0,
+		application.database.GetCount(),
 		application.GetEPSGCode(),
 		application.GetDSProjection(),
 	}
@@ -148,14 +149,31 @@ func (a *app) GetDSProjection() string {
 // gives its best to extract epsg code
 func (a *app) GetEPSGCode() int {
 
-	if proj := a.GetDSProjection(); len(proj) > 1 {
-		fmt.Println("epsg code extraction still doesn't work!")
-		opts := []string{"-o", "wkt", proj}
-		if out, err := exec.Command(a.gdalsrs_bin, opts...).Output(); err == nil {
-			fmt.Println(out)
-		} else {
-			fmt.Println(err)
+	opts := []string{"-o", "epsg", a.database.GetSource()}
+	if out, err := exec.Command(a.gdalsrs_bin, opts...).Output(); err == nil {
+		if string(out) == "EPSG:-1\n" {
+			opts[1] = "wkt"
+			if out, err = exec.Command(a.gdalsrs_bin, opts...).Output(); err != nil {
+				return -1
+			}
 		}
+		var parsval string
+		cpos := strings.LastIndex(string(out), "EPSG") + 4
+		// fmt.Println(string(string(out)[cpos]))
+		switch c := string(out)[cpos]; string(c) {
+		case ":":
+			parsval = string(out)[cpos+1:]
+		case "\"":
+			// THERE IS AN ERROR HERE, FOR EG 900913, but is irrelevant for this purpose
+			parsval = string(out)[cpos+3 : cpos+7]
+		default:
+			parsval = "-1"
+		}
+		if retval, err := strconv.Atoi(parsval); err == nil {
+			return retval
+		}
+	} else {
+		fmt.Println(err)
 	}
 
 	return -1

@@ -55,6 +55,16 @@ func (db *DB) GetMetadata() (int, *model.Fields) {
 	return cnt, fields
 }
 
+func (db *DB) GetCount() int64 {
+	names := []string{"count(*)"}
+	fields := model.CreateFields(names)
+	if success := db.execSelect(fields); success > 0 {
+		val := fields.GetRecord(0)["count(*)"]
+		return (*(val).(*interface{})).(int64)
+	}
+	return -1
+}
+
 func (db *DB) execSelect(fields *model.Fields) int {
 	defer db.conn.Close()
 
