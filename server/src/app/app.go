@@ -139,7 +139,7 @@ func close_request_json(values []interface{}, w http.ResponseWriter) {
 func (a *app) GetDSProjection() string {
 	opts := []string{"-o", "proj4", a.database.GetSource()}
 	if out, err := exec.Command(a.gdalsrs_bin, opts...).Output(); err == nil {
-		return string(out)
+		return strings.TrimSpace(string(out))
 	} else {
 		fmt.Println(err)
 	}
