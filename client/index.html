@@ -53,7 +53,7 @@
                 if( !Array.isArray( mapinfo ) ){
                     mapinfo = [{
                         Geomcnt: -1,
-                        EPSG:    3857,
+                        EPSG:    4326,
                         Proj:    ''
                     }];
                 }
@@ -69,6 +69,9 @@
 
                 if( mapinfo.EPSG > 0 && mapinfo.Proj ){
                     proj4.defs( 'EPSG:' + mapinfo.EPSG, mapinfo.Proj.replace("'", '') );
+                }
+                if( mapinfo.EPSG > 0 ){
+                    window.mapctl.data_proj = 'EPSG:' + mapinfo.EPSG;
                 }
 
                 // add necessary event listeners
@@ -111,6 +114,8 @@
             <input type="button" value="start ..." class="start" />
             <div class="timer"></div>
         </div>
+
+        <input type="button" name="wasm" value="go experimental!">
 
         <div id="results">
             <h2>Results:</h2>

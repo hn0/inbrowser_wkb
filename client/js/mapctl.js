@@ -4,7 +4,7 @@
     mapctl   = function(){
         this.server    = 'http://localhost:8000/';
         this.requests  = { 'wkb': null, 'wkt': null };
-        this.data_proj = 'EPSG:3857';
+        this.data_proj = 'EPSG:4326';
         this.map_proj  = 'EPSG:4326';
     };
 
@@ -26,12 +26,36 @@
                 this.get_data( this.server + type )
                     .then(function( xhr ) { 
 
-
+                        console.log( 'dont forget a logging' );
                         // now parsing of the data
+                        this.requests[type] = null;
                         var features = this['parse' + type]( xhr.response );
 
-                        console.log( features )
-                        this.requests[type] = null;
+                        var map = new ol.Map({
+                            target: mapdiv[0],
+                            layers: [ 
+                                new ol.layer.Tile({
+                                    source: new ol.source.OSM({})
+                                }), 
+                                new ol.layer.Vector({
+                                    renderMode: 'image',
+                                    source: new ol.source.Vector({
+                                        features: features
+                                    })
+                                }) ],
+                            view:  new ol.View({
+                                center: features.reduce( function(c, f){
+                                    var extent = f.getGeometry().getExtent();
+                                    c[0] = (c[0] + ((extent[0] + extent[2]) * .5) ) * .5;
+                                    c[1] = (c[1] + ((extent[1] + extent[3]) * .5) ) * .5;
+                                    return c;
+                                }, [0, 0]),
+                                zoom: 6,
+                                projection: this.map_proj
+                            })
+                        });
+
+                        // map.getView().fit( features );
 
                     }.bind( this ))
                     .catch(function(ex) { console.log('error call', ex); })
