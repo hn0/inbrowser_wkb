@@ -44,10 +44,12 @@ def test_wkb():
         while 1:
             id = struct.unpack( 'i', ba.read( 4 ) )[0]
             n  = struct.unpack( 'i', ba.read( 4 ) )[0]
+            # print( n )
             if id * n == 0:
                 break
             recordcnt += 1
             geo = ogr.CreateGeometryFromWkb( ba.read( n ) )
+            print( geo.ExportToWkt() )
             if geo.IsValid() and not geo.IsEmpty():
                 geocnt += 1
             # print( (id, n) )

@@ -24,7 +24,7 @@
 
                 this.requests[type] = performance.now();
                 this.log( 'Initializing ' + type + 'server requests' );
-                this.get_data( this.server + type )
+                this.get_data( this.server, type )
                     .then(function( xhr ) { 
 
                         console.log( 'dont forget a logging' );
@@ -62,6 +62,7 @@
                     }.bind( this ))
                     .catch(function(ex) { 
                         this.log( 'Response form server took: ' + (performance.now() - this.requests[type]) + 'ms; status error' );
+                        console.log( ex )
                     }.bind( this ))
                     .then(function() { 
                         this.log( 'Whole process took: ' + (performance.now() - this.requests[type]) + 'ms' );
@@ -99,8 +100,9 @@
                 dataProjection: this.data_proj,
                 featureProjection: this.map_proj
             } );
-            f.setProperties( {id: record.ID} );
+            f.setProperties( {id: record.Id} );
             ret.push( f );
+            console.log( record.Id )
         });
 
         return ret;
@@ -108,49 +110,52 @@
 
     mapctl.prototype.parsewkb = function( data ){
         var ret       = [];
-        var rreader   = new FileReader();
-        var wktreader = new FileReader();
-        var db        = new Blob( [data], { type: 'octet/stream' } );
-        var i         = 8;
-
-        wktreader.onload = () => {
-            // wkb has structure of??!
-            var a = new Int32Array( wktreader.result );
-            console.log( a[0].toString(2) );
+        i = 0;
+        while( i < data.byteLength ){
+            var buf = new Uint32Array( data.slice( i, i+8 ) );
+            i += 8;
+            if( buf[1] ){
+                console.log( buf )
+                
+                var geom = this.parse_wkb( data.slice( i, i + buf[1] ) );
+                i += buf[1];
+            }
         }
-
-        rreader.onload = () => { 
-            var a = new Uint32Array( rreader.result );
-
-            // char? 8 bytes
-            console.log( a );
-
-            wktreader.readAsArrayBuffer( db.slice( i, i + 32 ) );
-
-            // offset?!
-            // i += a[1]
-            // if( i < db.size ){
-            //     rreader.readAsArrayBuffer( db.slice( i, (i+8) ) );
-            // }
-        };
-
-        rreader.readAsArrayBuffer( db.slice( i-8, i ) );
-        // while i -->
-
-
         return ret;
     };
 
-    mapctl.prototype.get_data = function( url ) {
+    mapctl.prototype.parse_wkb = function( wkb )
+    {
+        var dw  = new DataView( wkb );
+        // first byte indicates byte order 
+        // next 4 bytes denotes geometry type
+        var bo  = dw.getUint8( 0, true );
+        var typ = dw.getUint32( 1, true );
+        
+        // TODO: move this stuff to new class!!!
+        if( typ == 6 ){
+            var num_rings = dw.getUint32( 5, true);
+            console.log( dw.getUint8( 9, true )); // again -> polygon
+            console.log( dw.getUint32( 10, true )); // wkb type
+            console.log( dw.getUint32( 14, true )); // number of rings
+            // now comes linear ring ->
+            console.log( dw.getUint32( 18, true )); // number of points
+            console.log( dw.getFloat64( 22, true )); // position is off?!
+        }
+
+    };
+
+    mapctl.prototype.get_data = function( url, type ) {
         return new Promise( (success, error) => {
             
             var req = new XMLHttpRequest();
 
+            req.responseType = (type == 'wkb') ? 'arraybuffer' : 'JSON';
             req.onload  = () => success( req );
             req.onerror = () => error( null );
 
             try{
-                req.open( "GET", url, true );
+                req.open( "GET", url + type, true );
                 req.send();
             }
             catch (ex){
