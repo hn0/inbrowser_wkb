@@ -42,9 +42,19 @@
                 return;
             }
 
-            // config ( map info ) data is needed first
-            var req = new XMLHttpRequest();
+            var log_elem = document.getElementById( 'results' );
+            if( log_elem ){
+                var lists = log_elem.getElementsByTagName( 'ul' );
+                if( lists ){
+                    window.mapctl.log_element = lists[0];
+                }
+                var clear = log_elem.getElementsByTagName( 'input' );
+                if( clear ){
+                    clear[0].addEventListener( 'click', function() { window.mapctl.clear_log(); } );
+                }
+            }
 
+            var req = new XMLHttpRequest();
             req.onload  = () => {
 
                 var mapinfo = JSON.parse( req.responseText );

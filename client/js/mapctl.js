@@ -2,10 +2,11 @@
     
 
     mapctl   = function(){
-        this.server    = 'http://localhost:8000/';
-        this.requests  = { 'wkb': null, 'wkt': null };
-        this.data_proj = 'EPSG:4326';
-        this.map_proj  = 'EPSG:4326';
+        this.server      = 'http://localhost:8000/';
+        this.requests    = { 'wkb': null, 'wkt': null };
+        this.data_proj   = 'EPSG:4326';
+        this.map_proj    = 'EPSG:4326';
+        this.log_element = null;
     };
 
     mapctl.prototype.show_map = function( target, type ){
@@ -14,22 +15,25 @@
             var timer  = target.getElementsByClassName( 'timer' );
             var mapdiv = target.getElementsByClassName( 'map'   );
 
+            console.log( 'implement timer!' );
+
             if( timer.length * mapdiv.length ){
 
                 timer[0].innerHTML  = '';
                 mapdiv[0].innerHTML = '';
 
-                // // this would be better suited for finally call!?
-                // var map = this.init_map( mapdiv[0] );
-
                 this.requests[type] = performance.now();
+                this.log( 'Initializing ' + type + 'server requests' );
                 this.get_data( this.server + type )
                     .then(function( xhr ) { 
 
                         console.log( 'dont forget a logging' );
                         // now parsing of the data
-                        this.requests[type] = null;
+                        
+                        this.log( 'Response form server took: ' + (performance.now() - this.requests[type]) + 'ms; status ok' );
+                        var parse_performance = performance.now();
                         var features = this['parse' + type]( xhr.response );
+                        this.log( 'Parsing features took: ' + (performance.now() - parse_performance) + "ms; got " + features.length + " features " );
 
                         var map = new ol.Map({
                             target: mapdiv[0],
@@ -50,20 +54,24 @@
                                     c[1] = (c[1] + ((extent[1] + extent[3]) * .5) ) * .5;
                                     return c;
                                 }, [0, 0]),
-                                zoom: 6,
+                                zoom: 1,
                                 projection: this.map_proj
                             })
                         });
 
-                        // map.getView().fit( features );
-
                     }.bind( this ))
-                    .catch(function(ex) { console.log('error call', ex); })
-                    .then(function() { console.log('finally call'); })
+                    .catch(function(ex) { 
+                        this.log( 'Response form server took: ' + (performance.now() - this.requests[type]) + 'ms; status error' );
+                    }.bind( this ))
+                    .then(function() { 
+                        this.log( 'Whole process took: ' + (performance.now() - this.requests[type]) + 'ms' );
+                        this.requests[type] = null;
+                        console.log('finally call'); 
+                    }.bind( this ));
 
             }
             else {
-                this.log( 'unexpected structure' );
+                this.log( 'Unexpected response structure' );
             }
 
         }
@@ -153,10 +161,23 @@
     };
 
     mapctl.prototype.log = function( message ) {
-        console.log( message );
+        if( this.log_element ){
+            var a = document.createElement( 'li' );
+            a.appendChild( document.createTextNode( message ) );
+            this.log_element.appendChild( a );
+        }
+        else {
+            console.log( message );
+        }
     };
 
     mapctl.prototype.clear_log = function() {
+        if( this.log_element ){
+            this.log_element.innerHTML = '';
+        }
+        else {
+
+        }
         console.log( 'clear messages!' );
     };
 
