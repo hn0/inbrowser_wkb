@@ -109,41 +109,45 @@
     };
 
     mapctl.prototype.parsewkb = function( data ){
-        var ret       = [];
-        i = 0;
+        var ret = [];
+        var wkb = wkb_format();
+        var i   = 0;
         while( i < data.byteLength ){
             var buf = new Uint32Array( data.slice( i, i+8 ) );
             i += 8;
             if( buf[1] ){
-                console.log( buf )
+                // console.log( buf )
                 
-                var geom = this.parse_wkb( data.slice( i, i + buf[1] ) );
+                var id = buf[0];
+                wkb.parse( data.slice( i, i + buf[1] ) );
+                console.log( id, wkb.type, wkb.coords );
+                
                 i += buf[1];
             }
         }
         return ret;
     };
 
-    mapctl.prototype.parse_wkb = function( wkb )
-    {
-        var dw  = new DataView( wkb );
-        // first byte indicates byte order 
-        // next 4 bytes denotes geometry type
-        var bo  = dw.getUint8( 0, true );
-        var typ = dw.getUint32( 1, true );
+    // mapctl.prototype.parse_wkb = function( wkb )
+    // {
+    //     var dw  = new DataView( wkb );
+    //     // first byte indicates byte order 
+    //     // next 4 bytes denotes geometry type
+    //     var bo  = dw.getUint8( 0, true );
+    //     var typ = dw.getUint32( 1, true );
         
-        // TODO: move this stuff to new class!!!
-        if( typ == 6 ){
-            var num_rings = dw.getUint32( 5, true);
-            console.log( dw.getUint8( 9, true )); // again -> polygon
-            console.log( dw.getUint32( 10, true )); // wkb type
-            console.log( dw.getUint32( 14, true )); // number of rings
-            // now comes linear ring ->
-            console.log( dw.getUint32( 18, true )); // number of points
-            console.log( dw.getFloat64( 22, true )); // position is off?!
-        }
+    //     // TODO: move this stuff to new class!!!
+    //     if( typ == 6 ){
+    //         var num_rings = dw.getUint32( 5, true);
+    //         console.log( dw.getUint8( 9, true )); // again -> polygon
+    //         console.log( dw.getUint32( 10, true )); // wkb type
+    //         console.log( dw.getUint32( 14, true )); // number of rings
+    //         // now comes linear ring ->
+    //         console.log( dw.getUint32( 18, true )); // number of points
+    //         console.log( dw.getFloat64( 22, true )); // position is off?!
+    //     }
 
-    };
+    // };
 
     mapctl.prototype.get_data = function( url, type ) {
         return new Promise( (success, error) => {
