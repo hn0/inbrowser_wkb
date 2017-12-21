@@ -26,9 +26,6 @@
                 this.log( 'Initializing ' + type + 'server requests' );
                 this.get_data( this.server, type )
                     .then(function( xhr ) { 
-
-                        console.log( 'dont forget a logging' );
-                        // now parsing of the data
                         
                         this.log( 'Response form server took: ' + (performance.now() - this.requests[type]) + 'ms; status ok' );
                         var parse_performance = performance.now();
@@ -120,6 +117,13 @@
                 
                 var id = buf[0];
                 wkb.parse( data.slice( i, i + buf[1] ) );
+                if( wkb.type == 'multipolygon' ){
+                    var f = new ol.Feature({
+                        id: id,
+                        geometry: new ol.geom.MultiPolygon( wkb.coords )
+                    });
+                    ret.push( f );
+                }
                 console.log( id, wkb.type, wkb.coords );
                 
                 i += buf[1];
@@ -127,27 +131,6 @@
         }
         return ret;
     };
-
-    // mapctl.prototype.parse_wkb = function( wkb )
-    // {
-    //     var dw  = new DataView( wkb );
-    //     // first byte indicates byte order 
-    //     // next 4 bytes denotes geometry type
-    //     var bo  = dw.getUint8( 0, true );
-    //     var typ = dw.getUint32( 1, true );
-        
-    //     // TODO: move this stuff to new class!!!
-    //     if( typ == 6 ){
-    //         var num_rings = dw.getUint32( 5, true);
-    //         console.log( dw.getUint8( 9, true )); // again -> polygon
-    //         console.log( dw.getUint32( 10, true )); // wkb type
-    //         console.log( dw.getUint32( 14, true )); // number of rings
-    //         // now comes linear ring ->
-    //         console.log( dw.getUint32( 18, true )); // number of points
-    //         console.log( dw.getFloat64( 22, true )); // position is off?!
-    //     }
-
-    // };
 
     mapctl.prototype.get_data = function( url, type ) {
         return new Promise( (success, error) => {
