@@ -8,7 +8,7 @@
 
 #include<stdio.h>
 
-void convert()
+void convert( char* wkb, int len )
 {
-    printf( "Ok let star coding!\n" );
+    printf( "Length of array is %d\n", sizeof( wkb ) );
 }

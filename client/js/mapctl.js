@@ -3,7 +3,7 @@
 
     mapctl   = function(){
         this.server      = 'http://localhost:8000/';
-        this.requests    = { 'wkb': null, 'wkt': null };
+        this.requests    = { 'wkb': null, 'wkt': null, 'wasm': null };
         this.data_proj   = 'EPSG:4326';
         this.map_proj    = 'EPSG:4326';
         this.log_element = null;
@@ -85,6 +85,14 @@
             layers: [ new ol.layer.Tile({ source: new ol.source.OSM() }) ]
         });
         return map;
+    };
+
+    mapctl.prototype.parsewasm = function( data ){
+        var ret = [];
+        
+        console.log( Module.ccall( 'convert' ) );
+
+        return ret;
     };
 
     mapctl.prototype.parsewkt = function( data ){

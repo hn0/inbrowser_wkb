@@ -104,7 +104,10 @@
                 if( wasm_btn ){
                     wasm_btn.addEventListener( 'click', function() {
                         if( Module ){
-                            console.log( Module.ccall( 'convert' ) );
+                            // where to place the map
+                            var container = document.getElementById( 'mapwasm' );
+                            container.style.visibility = 'block';
+                            window.mapctl.show_map( container, 'wasm', mapinfo.EPSG );
                         }
                         else {
                             alert( 'Sorry, your browser does not support web assembly :(' );
@@ -125,6 +128,7 @@
     <div id="wrapper">
     
         <div id="info"></div>
+        <input id="wasm" type="button" name="wasm" value="go experimental!">
 
         <div id="mapwkb" class="mapcontainer">
             <h2>WKB driven map</h2>
@@ -140,7 +144,12 @@
             <div class="timer"></div>
         </div>
 
-        <input id="wasm" type="button" name="wasm" value="go experimental!">
+        <div id="mapwasm" class="mapcontainer" style="visibility: none;">
+            <h2>WKT driven map</h2>
+            <div class="map"></div>
+            <input type="button" value="start ..." class="start" />
+            <div class="timer"></div>
+        </div>
 
         <div id="results">
             <h2>Results:</h2>
