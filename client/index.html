@@ -30,6 +30,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ol3/4.6.1/ol.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.4/proj4.js"></script>
+    <script type="text/javascript" src="js/wkb_asm.js"></script>
     <script type="text/javascript" src="js/wkb.js"></script>
     <script type="text/javascript" src="js/mapctl.js"></script>
 
@@ -97,6 +98,19 @@
                                 });
                     }
                 });
+
+                // now experimental stuff
+                var wasm_btn = document.getElementById( 'wasm' );
+                if( wasm_btn ){
+                    wasm_btn.addEventListener( 'click', function() {
+                        if( Module ){
+                            console.log( Module.ccall( 'convert' ) );
+                        }
+                        else {
+                            alert( 'Sorry, your browser does not support web assembly :(' );
+                        }
+                    });
+                }
             };
 
             req.open( "GET", window.mapctl.server + 'geo', true );
@@ -126,7 +140,7 @@
             <div class="timer"></div>
         </div>
 
-        <input type="button" name="wasm" value="go experimental!">
+        <input id="wasm" type="button" name="wasm" value="go experimental!">
 
         <div id="results">
             <h2>Results:</h2>

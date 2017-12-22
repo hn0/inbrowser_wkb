@@ -192,6 +192,7 @@ func main() {
 	}
 
 	http.HandleFunc("/wkb", wkb_response)
+	http.HandleFunc("/wasm", wkb_response)
 	http.HandleFunc("/wkt", wkt_response)
 	http.HandleFunc("/metadata", metadata_response)
 	http.HandleFunc("/geo", info_response)
