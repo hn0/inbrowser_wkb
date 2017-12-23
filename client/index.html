@@ -4,6 +4,8 @@
     <title>WKB poc showcase page</title>
 
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/ol3/4.6.1/ol.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.0/base-min.css">
     <style type="text/css">
         body, #wrapper {
             width: 100%
@@ -24,6 +26,15 @@
         #results{
             clear: both;
         }
+        .btn{
+            color: #ddf;
+            cursor: auto;
+        }
+        .btn:hover {
+            color: #99f;
+            cursor: pointer;
+        }
+
     </style>
 
 
@@ -37,7 +48,6 @@
     <script type="text/javascript">
 
         var init = function(timeout) {
-            // proj4 def should be automatized!
 
             if( !window.mapctl ){
                 alert( 'something went wrong :( please refresh the page' );
@@ -73,11 +83,29 @@
 
                 var info = document.getElementById( 'info' );
                 if( info && mapinfo.Geomcnt > 0 ){
-                    var title       = document.createElement( 'p' );
-                    title.className = 'plain';
-                    title.appendChild( document.createTextNode( 'Sample data set size ' + mapinfo.Geomcnt + ' features.' ) );
-                    info.appendChild( title );
+
+                    var stats = document.getElementById( 'stats' );
+                    if( stats ){
+                        var title       = document.createElement( 'p' );
+                        title.className = 'plain';
+                        title.appendChild( document.createTextNode( 'Sample data set size ' + mapinfo.Geomcnt + ' features.' ) );
+                        stats.appendChild( title );
+                        var datasource = document.createElement( 'p' );
+                        datasource.className = 'plain';
+                        datasource.appendChild( document.createTextNode( 'Sample dataset source: ' + mapinfo.Source ) );
+                        stats.appendChild( datasource );
+                    }
+                    
+                    Array.from( info.getElementsByClassName( 'btn' ) ).forEach( function(div) {
+                        div.addEventListener( 'click', function(){ 
+                            if( stats ){
+                                stats.style.display = ( stats.style.display == 'none' ) ? 'block' : 'none';
+                            }
+                        } );
+                    });
                 }
+
+
 
                 if( mapinfo.EPSG > 0 && mapinfo.Proj ){
                     proj4.defs( 'EPSG:' + mapinfo.EPSG, mapinfo.Proj.replace("'", '') );
@@ -127,7 +155,10 @@
 
     <div id="wrapper">
     
-        <div id="info"></div>
+        <div id="info">
+            <div class="btn"><i class="fa fa-info-circle fa-2x"></i></div>
+            <div id="stats" style="display: none;"></div>
+        </div>
         <input id="wasm" type="button" name="wasm" value="go experimental!">
 
         <div id="mapwkb" class="mapcontainer">
