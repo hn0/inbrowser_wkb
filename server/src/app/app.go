@@ -22,16 +22,6 @@ type app struct {
 
 var application *app
 
-func hello_response(w http.ResponseWriter, r *http.Request) {
-	var resp []interface{}
-	resp = make([]interface{}, 1)
-	resp[0] = map[string]string{
-		"message":       "Hello world, this machine has become now a server!",
-		"sample source": application.database.GetSource(),
-	}
-	close_request_json(resp, w)
-}
-
 func wkb_response(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 	cnt, model := application.database.GetGeometry()
@@ -113,10 +103,12 @@ func info_response(w http.ResponseWriter, r *http.Request) {
 	var resp []interface{}
 	resp = make([]interface{}, 1)
 	resp[0] = struct {
+		Source  string
 		Geomcnt int64
 		EPSG    int
 		Proj    string
 	}{
+		application.database.GetSource(),
 		application.database.GetCount(),
 		application.GetEPSGCode(),
 		application.GetDSProjection(),
@@ -181,8 +173,11 @@ func (a *app) GetEPSGCode() int {
 
 func main() {
 
-	if len(os.Args) != 2 {
-		log.Fatal("A full path to sample database needs to be provided! Exiting ...")
+	if len(os.Args) != 3 {
+		log.Fatal("Usage: app sample_database_path static_pages_dir")
+		log.Fatal("where: sample_database_path is file pointer to sqlite database holding sample geometry")
+		log.Fatal("and static_pages_dir is path to the folder containing html/javascript files")
+		log.Fatal("Exiting...")
 	}
 
 	application = new(app)
@@ -196,7 +191,7 @@ func main() {
 	http.HandleFunc("/wkt", wkt_response)
 	http.HandleFunc("/metadata", metadata_response)
 	http.HandleFunc("/geo", info_response)
-	http.HandleFunc("/", hello_response)
+	http.Handle("/", http.FileServer(http.Dir(os.Args[2])))
 	http.ListenAndServe(":8000", nil)
 	fmt.Println("up and running")
 }

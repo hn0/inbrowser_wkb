@@ -5,8 +5,6 @@
 #  Created: 19. Nov 2017
 #
 
-# TODO: add code for docker container
-#  for first iter local installation of go will be enough
 
 SERVER_PATH=$PWD"/server"
 
@@ -17,6 +15,7 @@ fi
 cd $SERVER_PATH
 echo "Starting server ..."
 
-go run src/app/app.go ../data/sample_data.sqlite
 
-# echo "Server running"
+# usage app.go geometry_dataset static_files_folder
+go run src/app/app.go ../data/sample_data.sqlite ../client
+
