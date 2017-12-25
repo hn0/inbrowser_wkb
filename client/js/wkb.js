@@ -58,16 +58,18 @@ geom.prototype.parse = function( wkb )
     this.type = typ;
     var c = this.read( wkb );
     if( typ == 'point' ){ // not complete!
-        this.coords = c;
+        this.coords = c[0];
     }
 };
 
+// read func EXTREAMLY BAD DESIGN, REWRITE IS NEEDED!
 geom.prototype.read = function( wkb )
 {
     var dw     = new DataView( wkb );
     var coords = [];
     var bo     = dw.getUint8( 0, true );
     var type   = dw.getUint32( 1, bo );
+    var read   = 5;
 
     switch( type ){
         case 1:
@@ -77,19 +79,19 @@ geom.prototype.read = function( wkb )
             console.log( 'parse linestring' );
             break;
         case 3:
-            var n   = dw.getUint32( 5, bo );
-            var pos = 9;
+            var n   = dw.getUint32( read, bo );
+            read += 4;
             coords  = new Array( n );
             for( var i=0; i < n; i++ ){
-                var rlen = dw.getUint32( pos, bo ); // number of pts!
-                pos += 4;
+                var rlen = dw.getUint32( read, bo ); // number of pts!
+                read += 4;
                 coords[i] = new Array( rlen );
                 for( var j=0; j < rlen; j++ ){
                     coords[i][j] = [
-                        dw.getFloat64( pos, bo ),
-                        dw.getFloat64( pos+8, bo )
+                        dw.getFloat64( read, bo ),
+                        dw.getFloat64( read+8, bo )
                     ];
-                    pos += 16;
+                    read += 16;
                 }
             }
             break;
@@ -100,14 +102,14 @@ geom.prototype.read = function( wkb )
             console.log( 'parse multilinestring' );
             break;
         case 6:
-            var n = dw.getUint32( 5, bo );
+            var n   = dw.getUint32( 5, bo );
+            read += 4;
             for( var i=0; i < n; i++){
-                // now when first part is done, where is the pointer to the next geometry!?
-                // slight rewrite of this idea is needed!
-                this.coords.push( this.read( wkb.slice( 9 ) ) )
-                break;
+                var g = this.read( wkb.slice( read ) );
+                this.coords.push( g[0] )
+                read += g[1];
             }
             break;
     }
-    return coords;
+    return [coords, read];
 };

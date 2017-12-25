@@ -161,10 +161,15 @@
     };
 
     mapctl.prototype.log = function( message ) {
-        if( this.log_element ){
+        if( this.log_element ){            
             var a = document.createElement( 'li' );
             a.appendChild( document.createTextNode( message ) );
-            this.log_element.appendChild( a );
+            if( this.log_element.firstElementChild ){
+                this.log_element.insertBefore( a, this.log_element.firstElementChild );
+            }
+            else{ 
+                this.log_element.appendChild( a );
+            }
         }
         else {
             console.log( message );

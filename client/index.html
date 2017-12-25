@@ -6,25 +6,68 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/ol3/4.6.1/ol.css">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.0/base-min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.0/buttons-min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.0/grids-min.css">
     <style type="text/css">
-        body, #wrapper {
-            width: 100%
+        body {
+            width: 100%;
+            height: 100%;
+            text-align: center;
         }
-        #wrapper{
-            margin: auto 10px;
+        #info div {
+            float: left;
+            margin: 15px;
+        }
+        #wrapper {
+            width: 100%;
+            height: 100%;
+            text-align: center;
         }
         .mapcontainer{
             width: 40%;
-            height: 400px;
+            height: 550px;
             text-align: center;
-            float: left;
+            margin-left:10px;
+            background-color: #ccc;
+            border: 1px solid #777;
+            border-radius: 10px;
         }
         .map {
             width: 100%;
-            height: 100%;
+            height: 400px;
+        }
+        .mapcontainer input{
+            margin-top:15px;
         }
         #results{
-            clear: both;
+            margin-top: 15px;
+            margin-left: 15px;
+            text-align: left;
+            background-color: #aaa;
+            border: 1px solid #555;
+            border-radius: 10px;
+            width: 80%;
+        }
+        #results input {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            margin-left: 15px;
+        }
+        #results ul {
+            list-style-type: circle;
+            list-style-position: outside;
+            margin-left: 10px;
+        }
+        #results li {
+            padding-left: 10px;
+        }
+        #results li.hruler {
+            list-style-type: none;
+            border-bottom: 3px solid black;
+            width: 100%;
+            margin-left: -30px;
+            margin-top:5px;
+            margin-bottom: 5px;
         }
         .btn{
             color: #ddf;
@@ -121,6 +164,11 @@
                         _.each( container.getElementsByTagName( 'input' ), 
                                 function( inp ) {
                                    inp.addEventListener( 'click', function() {
+                                    if( window.mapctl.log_element.firstElementChild ){
+                                        var lruler = document.createElement( 'li' );
+                                        lruler.className = 'hruler';
+                                        window.mapctl.log_element.insertBefore( lruler, window.mapctl.log_element.firstElementChild );
+                                    }
                                     window.mapctl.show_map( container, type, mapinfo.EPSG );
                                    });
                                 });
@@ -158,34 +206,47 @@
         <div id="info">
             <div class="btn"><i class="fa fa-info-circle fa-2x"></i></div>
             <div id="stats" style="display: none;"></div>
-        </div>
-        <input id="wasm" type="button" name="wasm" value="go experimental!">
-
-        <div id="mapwkb" class="mapcontainer">
-            <h2>WKB driven map</h2>
-            <div class="map"></div>
-            <input type="button" value="start ..." class="start" />
-            <div class="timer"></div>
+            <div class="experimental">
+                <input id="wasm" type="button" name="wasm" value="go experimental!" class="pure-button">
+            </div>
         </div>
 
-        <div id="mapwkt" class="mapcontainer">
+        <h2 style="margin-top: 50px; float:left;">
+            WKB client rendering performance showcase
+        </h2>
+
+        <div style="clear: both;"></div>
+
+        <div class="pure-g">
+            <div id="mapwkb" class="mapcontainer pure-u-1-2">
+                <h2>WKB driven map</h2>
+                <div class="map"></div>
+                <input type="button" value="start ..." class="start pure-button" />
+                <div class="timer"></div>
+            </div>
+
+            <div id="mapwkt" class="mapcontainer pure-u-1-2">
+                <h2>WKT driven map</h2>
+                <div class="map"></div>
+                <input type="button" value="start ..." class="start pure-button" />
+                <div class="timer"></div>
+            </div>
+        </div>
+
+        <!-- this one goes in popup window?! -->
+        <div id="mapwasm" class="mapcontainer" style="display: none;">
             <h2>WKT driven map</h2>
             <div class="map"></div>
-            <input type="button" value="start ..." class="start" />
+            <input type="button" value="start ..." class="start pure-button" />
             <div class="timer"></div>
         </div>
 
-        <div id="mapwasm" class="mapcontainer" style="visibility: none;">
-            <h2>WKT driven map</h2>
-            <div class="map"></div>
-            <input type="button" value="start ..." class="start" />
-            <div class="timer"></div>
-        </div>
+        <div style="clear:both;"></div>
 
         <div id="results">
             <h2>Results:</h2>
             <ul></ul>
-            <input type="button" value="clear" />
+            <input type="button" value="clear" class="pure-button" />
         </div>
 
     </div>
