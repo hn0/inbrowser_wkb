@@ -8,6 +8,5 @@ fi
 
 emcc wkb.c -s WASM=1 -s EXPORTED_FUNCTIONS='["_convert", "_type"]' -s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall"]' -o ../client/js/wkb_asm.js
 
-
 # quick and dirty path update
 sed -i -e 's+wkb_asm.wasm+js/wkb_asm.wasm+g' ../client/js/wkb_asm.js

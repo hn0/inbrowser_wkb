@@ -2,32 +2,48 @@
 
     Simple, POC style script, with wasm platform as compile target
 
+    TODO: currently support for byte order is missing
+    for byte swapping refer to:
+        https://stackoverflow.com/questions/2182002/convert-big-endian-to-little-endian-in-c-without-using-provided-func
+
     Created: 22. Dec 2017
     Author:  Hrvoje Novosel<hrvojedotnovosel@gmail.com>
 */
 
 #include<stdio.h>
-#include "gdal.h"
 
-char* type( long* wkb )
+char* type( unsigned char* wkb )
 {
-
-    OGRGeometryH hGeo;
-
-    hGeo = OGR_G_CreateGeometry( wkbMultiPolygon );
-
-    OGR_G_DestroyGeometry( hGeo );
-
-    // now we need a type!
-    // printf( "Length of array element is %d, byte order %04x and type %i \n", sizeof( wkb ), wkb[0]&0x1, wkb[0]&0x01 );
-
+    switch( (int)wkb[1] ){
+        case 1:
+            return "point";
+        case 2:
+            return "linestring";
+        case 3:
+            return "polygon";
+        case 4:
+            return "multipoint";
+        case 5:
+            return "multilinestring";
+        case 6:
+            return "multipolygon";
+        default:
+            printf( "Unsupported geometry type detected, falling back to default empty geometry!\n" );
+    }
     return "EMPTY";
 }
 
-char* convert( char* wkb, int len )
+void convert( unsigned char* wkb, int len )
 {
-    // TODO: see if usage of gdal libs is feasible?!
-    printf( "Length of array element is %d and complete length of blob is %d\n", sizeof( wkb ), len );
-
-    return "ok";
+    // TODO: again, byte order is not implemented!
+    switch( (int)wkb[1] ){
+        case 6:
+            printf( "Number of polygons: %i\n", (int)wkb[5] );
+            break;
+    }
 }
+
+// void parseMultipolygon( unsigned char* wkb )
+// {
+
+// }
