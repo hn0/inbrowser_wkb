@@ -107,7 +107,6 @@
             } );
             f.setProperties( {id: record.Id} );
             ret.push( f );
-            console.log( record.Id )
         });
 
         return ret;
@@ -121,7 +120,6 @@
             var buf = new Uint32Array( data.slice( i, i+8 ) );
             i += 8;
             if( buf[1] ){
-                // console.log( buf )
                 
                 var id = buf[0];
                 wkb.parse( data.slice( i, i + buf[1] ) );

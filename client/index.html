@@ -39,6 +39,16 @@
         .mapcontainer input{
             margin-top:15px;
         }
+        #mapwasm {
+            width: 80%;
+            height: 550px;
+            text-align: center;
+            margin-left:15px;
+            margin-top: 10px;
+            background-color: #ede;
+            border: 1px solid #777;
+            border-radius: 10px;   
+        }
         #results{
             margin-top: 15px;
             margin-left: 15px;
@@ -182,7 +192,7 @@
                         if( Module ){
                             // where to place the map
                             var container = document.getElementById( 'mapwasm' );
-                            container.style.visibility = 'block';
+                            container.style.display = 'block';
                             window.mapctl.show_map( container, 'wasm', mapinfo.EPSG );
                         }
                         else {

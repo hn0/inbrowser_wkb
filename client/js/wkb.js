@@ -45,10 +45,6 @@ geom.prototype.parse = function( wkb )
         case 6:
             typ = 'multipolygon';
             break;
-            // var n = dw.getUint32( 5, bo );
-            // this.coords there is a n polygons here
-            // this.parse( wkb.slice( 9 ) )
-            // console.log( 'a wkb_multypolygon here' );
         case 7:
             console.warn( 'Geometry collection not supported yet!' );
         default:
