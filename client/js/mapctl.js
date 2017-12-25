@@ -89,9 +89,41 @@
 
     mapctl.prototype.parsewasm = function( data ){
         var ret = [];
-        
-        console.log( Module.ccall( 'convert' ) );
+        var wkb = wkb_format();
+        var i   = 0;
+        while( i < data.byteLength ){
+            var buf = new Uint32Array( data.slice( i, i+8 ) );
+            i += 8;
+            if( buf[1] ){
+                
+                var id = buf[0];
+                var wkb = data.slice( i, i+buf[1] );
 
+                console.log( 'wasam start' );
+
+                // this step is f slow!!!
+                var arr = new Uint8Array( data.slice( i, i+buf[1]) );
+                var wa_buff = Module._malloc( buf[1] );
+                Module.writeArrayToMemory( arr, wa_buff );
+                var typ = Module.ccall( 'type', 'string', ['arraybuffer'], [wa_buff] );
+                
+                console.log( Module.ccall( 'convert', '', ['arraybuffer', 'number'], [wa_buff, buf[1]] ) );
+                
+                console.log( 'wasam end', typ );
+
+                // wkb.parse( data.slice( i, i + buf[1] ) );
+                // if( wkb.type == 'multipolygon' ){
+                //     var f = new ol.Feature({
+                //         id: id,
+                //         geometry: new ol.geom.MultiPolygon( wkb.coords )
+                //     });
+                //     ret.push( f );
+                // }
+                // console.log( id, wkb.type, wkb.coords );
+                
+                i += buf[1];
+            }
+        }
         return ret;
     };
 
@@ -143,7 +175,7 @@
             
             var req = new XMLHttpRequest();
 
-            req.responseType = (type == 'wkb') ? 'arraybuffer' : 'JSON';
+            req.responseType = (type == 'wkt') ? 'JSON' : 'arraybuffer';
             req.onload  = () => success( req );
             req.onerror = () => error( null );
 

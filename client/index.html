@@ -190,6 +190,11 @@
                 if( wasm_btn ){
                     wasm_btn.addEventListener( 'click', function() {
                         if( Module ){
+                            if( window.mapctl.log_element.firstElementChild ){
+                                    var lruler = document.createElement( 'li' );
+                                    lruler.className = 'hruler';
+                                    window.mapctl.log_element.insertBefore( lruler, window.mapctl.log_element.firstElementChild );
+                                }
                             // where to place the map
                             var container = document.getElementById( 'mapwasm' );
                             container.style.display = 'block';
@@ -247,7 +252,6 @@
         <div id="mapwasm" class="mapcontainer" style="display: none;">
             <h2>WKT driven map</h2>
             <div class="map"></div>
-            <input type="button" value="start ..." class="start pure-button" />
             <div class="timer"></div>
         </div>
 

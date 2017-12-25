@@ -99,6 +99,7 @@ geom.prototype.read = function( wkb )
             break;
         case 6:
             var n   = dw.getUint32( 5, bo );
+            // console.log( 'number of geoms (js):', n );
             read += 4;
             for( var i=0; i < n; i++){
                 var g = this.read( wkb.slice( read ) );
