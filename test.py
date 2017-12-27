@@ -22,10 +22,12 @@ def test_server():
     """
     print( 'Testing server url' )
     with urllib.request.urlopen( SERVER ) as fp:
-        res = json.load( fp )
-        if not type( res ) is list:
-            raise Exception( 'Unexpected type, got:', str( type( res) ) )
-        print( 'Server says: ' + res[0]['message'] )
+        if len( fp.read() ) < 1:
+            raise Exception( 'Did not get an response from the server, please try again' )
+        # res = json.load( fp )
+        # if not type( res ) is list:
+        #     raise Exception( 'Unexpected type, got:', str( type( res) ) )
+        # print( 'Server says: ' + res[0]['message'] )
     print( 'Server test done successfully' )
 
 

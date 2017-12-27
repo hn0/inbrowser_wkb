@@ -11,6 +11,36 @@
 */
 
 #include<stdio.h>
+#include<stdlib.h>
+
+int read_geom( unsigned char* wkb, int pos )
+{
+    int typ = (int)wkb[++pos];
+
+    switch( typ ){
+        case 3:
+            pos += 4;
+            int n = (int)wkb[pos];
+            pos += 4;
+            for( int i=0; i < n; i++){
+                int ncoord = (int)wkb[pos];
+                pos += 4;
+                for( int j=0; j < ncoord; j++){
+                    // maybe right but byte order is wrong
+                    // well mem copy?!
+                    double* a = (double*) malloc( sizeof(double) );
+                    // *a = (double)wkb[pos];
+                    memcpy(a, &wkb[pos], sizeof(double));
+                    printf("x: %g \n", *a );
+                    pos += 8;
+                    break;
+                }
+                break;
+            }
+            break;
+    }
+    return pos;
+}
 
 char* type( unsigned char* wkb )
 {
@@ -33,17 +63,22 @@ char* type( unsigned char* wkb )
     return "EMPTY";
 }
 
+// for test, same lousy algorithm for comparison sake will be used
 void convert( unsigned char* wkb, int len )
 {
+    int pos = 1;
+
     // TODO: again, byte order is not implemented!
-    switch( (int)wkb[1] ){
+    // TODO: need an array for the coordinates
+    switch( (int)wkb[pos] ){
         case 6:
-            printf( "Number of polygons: %i\n", (int)wkb[5] );
-            break;
+            pos += 4;
+            int n = (int)wkb[pos];
+            pos += 4;
+            double ret[n]; // something like this
+            for( int i=0; i < n; i++ ){
+                pos += read_geom( wkb, pos );
+                break;
+            }
     }
 }
-
-// void parseMultipolygon( unsigned char* wkb )
-// {
-
-// }
