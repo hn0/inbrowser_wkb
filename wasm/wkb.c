@@ -12,6 +12,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include<byteswap.h>
 
 int read_geom( unsigned char* wkb, int pos )
 {
@@ -26,12 +27,7 @@ int read_geom( unsigned char* wkb, int pos )
                 int ncoord = (int)wkb[pos];
                 pos += 4;
                 for( int j=0; j < ncoord; j++){
-                    // maybe right but byte order is wrong
-                    // well mem copy?!
-                    double* a = (double*) malloc( sizeof(double) );
-                    // *a = (double)wkb[pos];
-                    memcpy(a, &wkb[pos], sizeof(double));
-                    printf("x: %g \n", *a );
+                    // todo: push to double array
                     pos += 8;
                     break;
                 }
@@ -63,22 +59,55 @@ char* type( unsigned char* wkb )
     return "EMPTY";
 }
 
-// for test, same lousy algorithm for comparison sake will be used
-void convert( unsigned char* wkb, int len )
+void print2(double x)//print double x in binary
 {
-    int pos = 1;
+    union {
+        double x;
+        char c[sizeof(double)];
+    } u;
 
-    // TODO: again, byte order is not implemented!
-    // TODO: need an array for the coordinates
-    switch( (int)wkb[pos] ){
-        case 6:
-            pos += 4;
-            int n = (int)wkb[pos];
-            pos += 4;
-            double ret[n]; // something like this
-            for( int i=0; i < n; i++ ){
-                pos += read_geom( wkb, pos );
-                break;
-            }
+    u.x = x;
+
+    for (unsigned ofs = 0; ofs < sizeof(double); ofs++) {
+        for(int i = 7; i >= 0; i--) {
+            printf(((1 << i) & u.c[ofs]) ? "1" : "0");
+        }
     }
+    printf("\n");
+}
+
+// for test, same lousy algorithm for comparison sake will be used
+void convert( unsigned char* wkb )
+{
+
+    // AND ADDITIONAL DOUBLE IS 32 BIT ON COMPILER NOT 64!!!!
+    // maybe only  solution is to write bytes back to memory?!
+    // see how emscripten handels that
+    // printf("x: %g \n", (float)__bswap_64( (unsigned long long)wkb[22] ) ); // expecting 147.288190079...
+
+    double tmp = (double)wkb[22];
+    print2( tmp );
+
+    int tst = __bswap_32( 0x806640 ); // YEP, THIS IS IT!!!, BUT WHY HERE THAT ONE BIT HAS NOT BEEN SET!!?!
+    printf("%g\n", (float)tst );
+
+    // unsigned long long a = __bswap_64( ((unsigned char*)&wkb)[1] );
+    // double b = (double)((int)wkb[1]);
+    // double b = (double)(((unsigned char*)&wkb)[22]);
+    // return b;
+    // int pos = 1;
+
+    // // TODO: again, byte order is not implemented!
+    // // TODO: need an array for the coordinates
+    // switch( (int)wkb[pos] ){
+    //     case 6:
+    //         pos += 4;
+    //         int n = (int)wkb[pos];
+    //         pos += 4;
+    //         double ret[n]; // something like this
+    //         for( int i=0; i < n; i++ ){
+    //             pos += read_geom( wkb, pos );
+    //             break;
+    //         }
+    // }
 }
