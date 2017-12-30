@@ -13,6 +13,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<emscripten.h>
 
 typedef unsigned long long uint;
 // actually we only need a double**!
@@ -93,7 +94,7 @@ char* type( unsigned char* wkb )
 }
 
 // for test, same lousy algorithm for comparison sake will be used
-void convert( unsigned char* wkb )
+int* convert( unsigned char* wkb )
 {
 
     // double* a = (double*)malloc( sizeof(double) );
@@ -119,5 +120,23 @@ void convert( unsigned char* wkb )
                 // printf( "%i -> poly done pos: %d \n", i, pos );
                 // TODO: now to return the value, see how to do it over emscripten
             }
+
+        // ok this can be used here!!!!
+            // so plan would be to return reference to first doulbe array, but length is then questionable?
+        // double* tst = malloc( sizeof(double) );
+        // *tst = -3.14;
+        // return tst;
+
+        // printf( "Returning the value of: %g\n", *(polygons[0].rings[0] + 0) );
+        // return polygons[0].rings[0];
+        // return 0;
+        free( polygons );
+        
+        break;
     }
+
+    int[] ret = {1,2,4};
+        return ret;
+
+    // return 0;
 }
