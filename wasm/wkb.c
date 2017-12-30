@@ -14,7 +14,11 @@
 #include<stdlib.h>
 #include<string.h>
 
-typedef unsigned long uint;
+typedef unsigned long long uint;
+// actually we only need a double**!
+typedef struct Polygons {
+    double** rings;
+} Poly;
 
 void print2(double x)//print double x in binary
 {
@@ -33,34 +37,34 @@ void print2(double x)//print double x in binary
     printf("\n");
 }
 
-uint read_geom( unsigned char* wkb, uint pos )
+// need a pointer for the doubles and array len!?
+uint read_geom( unsigned char* wkb, uint pos, Poly* poly )
 {
     uint read = 1;
     int typ  = (int)wkb[pos+read];
     switch( typ ){
         case 3:
             read += 4;
-            uint n = (uint)wkb[pos+read]; // n rings
+            uint n = (uint)wkb[pos+read] | ( (uint)wkb[pos+read+1] << 8) | ( (uint)wkb[pos+read+2] << 16) | ( (uint)wkb[pos+read+3] << 24); // n rings
             read += 4;
-            uint* ncoord = malloc( sizeof(uint) );
-            double* a = malloc( sizeof( double ) );
-            double* b = malloc( sizeof( double ) );
+            poly->rings = malloc( sizeof( double* ) * n );
             for( int i=0; i < n; i++ ){
-                // TODO: do not use memcpy!
-                memcpy( ncoord, &wkb[pos+read], 8); // n coords in ring
+                uint ncoord = (uint)wkb[pos+read] | ( (uint)wkb[pos+read+1] << 8) | ( (uint)wkb[pos+read+2] << 16) | ( (uint)wkb[pos+read+3] << 24); // n coords
                 read += 4;
-                for( int j=0; j < *ncoord; j++ ){
+                double* coord = malloc( sizeof( double ) * ncoord * 2 );
+                poly->rings[i] = coord;
+                int cpos = -1;
+                for( int j=0; j < ncoord; j++ ){
                     // todo: push to double array
-                    memcpy( a, &wkb[pos+read], sizeof( double ) );
-                    memcpy( b, &wkb[pos+read+8], sizeof( double ) );
-                    // printf("x: %g   y: %g\n", *a, *b);
+                    memcpy( &coord[++cpos], &wkb[pos+read], sizeof( double ) );
+                    memcpy( &coord[++cpos], &wkb[pos+read+8], sizeof( double ) );
+                    // printf("x: %g   y: %g\n", coord[cpos-1], coord[cpos]);
                     read += 16;
                 }
             }
-            free( ncoord );
             break;
         default:
-            printf( "type %i and pos %lu\n", typ, pos );
+            printf( "type %i and pos %llu\n", typ, pos );
             break;
     }
 
@@ -98,6 +102,7 @@ void convert( unsigned char* wkb )
     // printf("value: %g\n", *a );
     // free(a);
 
+    
     // TODO: again, byte order is not implemented!
     // TODO: need an array for the coordinates
     int pos = 1;
@@ -106,11 +111,13 @@ void convert( unsigned char* wkb )
             pos += 4;
             uint n = (int)wkb[pos];
             pos += 4;
-            printf( "n poly %i\n", n);
+            // printf( "n poly %llu\n", n);
+            Poly* polygons = malloc( n * sizeof *polygons );
             for( int i=0; i < n; i++ ){
                 // what is happening on 6 polygon, js reads the same value!?
-                pos += read_geom( wkb, pos );
-                printf( "%i -> poly done pos: %i\n", i, pos );
+                pos += read_geom( wkb, pos, &polygons[i] );
+                // printf( "%i -> poly done pos: %d \n", i, pos );
+                // TODO: now to return the value, see how to do it over emscripten
             }
     }
 }
