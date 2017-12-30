@@ -108,29 +108,12 @@
                 
                 console.log( Module.ccall( 'convert', '', ['arraybuffer'], [wa_buff] ) );
 
-                // we have an issue in number representation between js and c!
-
-                
                 var dw  = new DataView( wkb );
-                // now, an issue in positional read
-                // console.log( 'js 2452 val ->', dw.getFloat64( 2452 - 8, true ) ); //last float value is ok!
-                // console.log( 'js 2452 val ->', dw.getUint8( 2452 + 1, true ) ); //wth, why this value is off
-                // console.log( 'js --> ', dw.getFloat64(22, true), i, buf[1] ); // expecting 147.288190079...
-                // following line should yield number of geom to be 1
-                // console.log( 'n geom js -> ', dw.getUint8( 2076, true ) );
-                
-                // javascript reads 279 coordinates and c only 23
-                console.log( 'n coords js -> ', dw.getUint8( 2080, false ) );
-                // the value at pos 2080 is same but not correct, see in wkb.js why this offset is here!
-                
-                // in wkb ring no value reads at 2071 + 9 => 2080
-
                 // test of n rings
-                // console.log( '23 coords in c, js val ->', dw.getUint8( 2080, true ) ); //wth, why this value is off
+                // console.log( '23 coords in c, js val ->', dw.getUint32( 2080, true ) ); //wth, why this value is off
 
 
                 // ok, js and c reads the same values!, there is something off in counting!
-
                 console.log( 'wasam end', typ );
 
                 // wkb.parse( data.slice( i, i + buf[1] ) );
@@ -145,6 +128,7 @@
                 Module._free( buf );
                 i += buf[1];
             }
+            return ret; // debug
         }
         return ret;
     };

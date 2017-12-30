@@ -80,7 +80,7 @@ geom.prototype.read = function( wkb )
             coords  = new Array( n );
             for( var i=0; i < n; i++ ){
                 var rlen = dw.getUint32( read, bo ); // number of pts!
-                console.log( 'n rings ', n, rlen, read );
+                // console.log( 'n rings ', n, rlen, read, 'byte order', bo );
                 read += 4;
                 coords[i] = new Array( rlen );
                 for( var j=0; j < rlen; j++ ){
@@ -108,7 +108,7 @@ geom.prototype.read = function( wkb )
                 var g = this.read( wkb.slice( read ) );
                 this.coords.push( g[0] )
                 read += g[1];
-                console.log( i, read );
+                // console.log( i, read );
             }
             break;
         default:
