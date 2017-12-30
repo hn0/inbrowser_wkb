@@ -14,6 +14,8 @@
 #include<stdlib.h>
 #include<string.h>
 
+typedef unsigned int uint;
+
 void print2(double x)//print double x in binary
 {
     union {
@@ -31,38 +33,53 @@ void print2(double x)//print double x in binary
     printf("\n");
 }
 
-int read_geom( unsigned char* wkb, int pos )
+uint read_geom( unsigned char* wkb, uint pos )
 {
-    int typ = (int)wkb[++pos];
-
+    uint read = 1;
+    int typ  = (int)wkb[pos+read];
     switch( typ ){
         case 3:
-            pos += 4;
-            int n = (int)wkb[pos];
-            pos += 4;
+            read += 4;
+            uint n = (uint)wkb[pos+read]; // n rings
+            read += 4;
             double* a = malloc( sizeof( double ) );
             double* b = malloc( sizeof( double ) );
-            for( int i=0; i < n; i++){
-                int ncoord = (int)wkb[pos];
-                pos += 4;
-                for( int j=0; j < ncoord; j++){
+            uint coordpos;
+            uint ncoord2;
+            int j;
+            for( int i=0; i < n; i++ ){
+                uint ncoord = (uint)wkb[pos+read]; // n coords in ring
+                ncoord2 = ncoord;
+                coordpos = pos+read;
+                read += 4;
+                j = 0;
+                for( j; j < ncoord; j++ ){
                     // todo: push to double array
-                    memcpy( a, &wkb[pos], sizeof( double ) );
-                    memcpy( b, &wkb[pos+8], sizeof( double ) );
+                    memcpy( a, &wkb[pos+read], sizeof( double ) );
+                    memcpy( b, &wkb[pos+read+8], sizeof( double ) );
                     // printf("x: %g   y: %g\n", *a, *b);
-                    pos += 16;
+                    read += 16;
                 }
-                printf("ring done, next type:%i \n", (long)wkb[pos+1] );
+            }
+            if( (uint)wkb[pos+read+1] != 3){
+                printf( "read pt at: %i\n", read );
+                // in the error part, there is a single line ring => check in wkb js
+                // ring in the issue should have 279 coordinates, but here value is 23!!!! -> thats an issue!
+                printf( "number of coordinates %i, coordinates counter %i, read at: %i\n", ncoord2, j, coordpos );
+                // there is one geometry when this brakes apart!
+                // somehow number of rings is ok!
+                // printf( "value value of ngeom: %i and value of i %i (number of geom read: %i)\n", n, i, ngeopos);
+                // ok, next is number of coordinates!?
             }
             free(a);
             free(b);
             break;
-        default:
-            printf( "type %i and pos %i\n", typ, pos );
-            break;
+        // default:
+        //     printf( "type %i and pos %i\n", typ, pos );
+        //     break;
     }
 
-    return pos;
+    return read;
 }
 
 char* type( unsigned char* wkb )
@@ -102,11 +119,12 @@ void convert( unsigned char* wkb )
     switch( (int)wkb[pos] ){
         case 6:
             pos += 4;
-            int n = (int)wkb[pos];
+            uint n = (int)wkb[pos];
             pos += 4;
             printf( "n poly %i\n", n);
             for( int i=0; i < n; i++ ){
-                pos = read_geom( wkb, pos );
+                // what is happening on 6 polygon, js reads the same value!?
+                pos += read_geom( wkb, pos );
                 printf( "%i -> poly done pos: %i\n", i, pos );
             }
     }
