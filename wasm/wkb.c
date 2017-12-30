@@ -14,7 +14,7 @@
 #include<stdlib.h>
 #include<string.h>
 
-typedef unsigned int uint;
+typedef unsigned long uint;
 
 void print2(double x)//print double x in binary
 {
@@ -42,18 +42,14 @@ uint read_geom( unsigned char* wkb, uint pos )
             read += 4;
             uint n = (uint)wkb[pos+read]; // n rings
             read += 4;
+            uint* ncoord = malloc( sizeof(uint) );
             double* a = malloc( sizeof( double ) );
             double* b = malloc( sizeof( double ) );
-            uint coordpos;
-            uint ncoord2;
-            int j;
             for( int i=0; i < n; i++ ){
-                uint ncoord = (uint)wkb[pos+read]; // n coords in ring
-                ncoord2 = ncoord;
-                coordpos = pos+read;
+                // TODO: do not use memcpy!
+                memcpy( ncoord, &wkb[pos+read], 8); // n coords in ring
                 read += 4;
-                j = 0;
-                for( j; j < ncoord; j++ ){
+                for( int j=0; j < *ncoord; j++ ){
                     // todo: push to double array
                     memcpy( a, &wkb[pos+read], sizeof( double ) );
                     memcpy( b, &wkb[pos+read+8], sizeof( double ) );
@@ -61,22 +57,11 @@ uint read_geom( unsigned char* wkb, uint pos )
                     read += 16;
                 }
             }
-            if( (uint)wkb[pos+read+1] != 3){
-                printf( "read pt at: %i\n", read );
-                // in the error part, there is a single line ring => check in wkb js
-                // ring in the issue should have 279 coordinates, but here value is 23!!!! -> thats an issue!
-                printf( "number of coordinates %i, coordinates counter %i, read at: %i\n", ncoord2, j, coordpos );
-                // there is one geometry when this brakes apart!
-                // somehow number of rings is ok!
-                // printf( "value value of ngeom: %i and value of i %i (number of geom read: %i)\n", n, i, ngeopos);
-                // ok, next is number of coordinates!?
-            }
-            free(a);
-            free(b);
+            free( ncoord );
             break;
-        // default:
-        //     printf( "type %i and pos %i\n", typ, pos );
-        //     break;
+        default:
+            printf( "type %i and pos %lu\n", typ, pos );
+            break;
     }
 
     return read;
