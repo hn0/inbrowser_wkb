@@ -18,8 +18,8 @@
 typedef unsigned long long uint;
 // actually we only need a double**!
 typedef struct Polygons {
-    int nrings;
     double** rings;
+    int nrings;
 } Poly;
 
 void print2(double x)//print double x in binary
@@ -56,7 +56,6 @@ uint read_geom( unsigned char* wkb, uint pos, Poly* poly )
                 double* coord = malloc( sizeof( double ) * ncoord * 2 );
                 poly->nrings = ncoord;
                 poly->rings[i] = coord;
-                printf( "You should expect number of rings %i\n", poly->nrings );
                 int cpos = -1;
                 for( int j=0; j < ncoord; j++ ){
                     // todo: push to double array

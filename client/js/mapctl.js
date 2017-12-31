@@ -118,13 +118,19 @@
 
                 if( typ == 'multipolygon' ){
 
-                    var polyptr = Module._malloc( Uint8Array.BYTES_PER_ELEMENT )
+                    var polyptr = Module._malloc( Uint8Array.BYTES_PER_ELEMENT );
+                    console.log( 'polyptr init', polyptr )
                     // make a room for pointer array, but what this array will point to?!
                     // let say to ?! polygon object!? where
-                    var ngeo = Module.ccall( 'convert', 'number', ['arraybuffer', 'number*'], [wa_buff] );
+                    var ngeo = Module.ccall( 'convert', 'number', ['arraybuffer', 'number'], [wa_buff] );
 
 
-                    console.log( 'got back geometries count', ngeo, Module.HEAP8[ polyptr / Uint8Array.BYTES_PER_ELEMENT ] );
+                    // and this was bad idea!
+                    console.log( 'got the value:', polyptr )
+                    console.log( 'value from c:', Module.getValue( polyptr, 'i8') );
+                    // console.log( 'got back geometries count', ngeo, Module.HEAP8[ polyptr / Uint8Array.BYTES_PER_ELEMENT ] );
+                    // var tst = Module.HEAP8[ polyptr / Uint8Array.BYTES_PER_ELEMENT ];
+                    // console.log( 'and the float on passed value is ', Module.HEAPF64[ tst / Float64Array.BYTES_PER_ELEMENT ] )
 
                     // wkb.parse( data.slice( i, i + buf[1] ) );
                     // if( wkb.type == 'multipolygon' ){
