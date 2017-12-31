@@ -18,6 +18,7 @@
 typedef unsigned long long uint;
 // actually we only need a double**!
 typedef struct Polygons {
+    int nrings;
     double** rings;
 } Poly;
 
@@ -53,7 +54,9 @@ uint read_geom( unsigned char* wkb, uint pos, Poly* poly )
                 uint ncoord = (uint)wkb[pos+read] | ( (uint)wkb[pos+read+1] << 8) | ( (uint)wkb[pos+read+2] << 16) | ( (uint)wkb[pos+read+3] << 24); // n coords
                 read += 4;
                 double* coord = malloc( sizeof( double ) * ncoord * 2 );
+                poly->nrings = ncoord;
                 poly->rings[i] = coord;
+                printf( "You should expect number of rings %i\n", poly->nrings );
                 int cpos = -1;
                 for( int j=0; j < ncoord; j++ ){
                     // todo: push to double array
@@ -94,49 +97,30 @@ char* type( unsigned char* wkb )
 }
 
 // for test, same lousy algorithm for comparison sake will be used
-int* convert( unsigned char* wkb )
+int convert( unsigned char* wkb, char* geomloc )
 {
-
-    // double* a = (double*)malloc( sizeof(double) );
-    // memcpy( a, &wkb[22], sizeof( double ) );
-    // print2( *a );
-    // printf("value: %g\n", *a );
-    // free(a);
-
-    
-    // TODO: again, byte order is not implemented!
-    // TODO: need an array for the coordinates
-    int pos = 1;
+    int ngeo = 0;
+    int pos  = 1;
     switch( (int)wkb[pos] ){
         case 6:
             pos += 4;
-            uint n = (int)wkb[pos];
+            uint n = (uint)wkb[pos];
             pos += 4;
             // printf( "n poly %llu\n", n);
-            Poly* polygons = malloc( n * sizeof *polygons );
+            Poly* polygons = malloc( ngeo * sizeof *polygons );
             for( int i=0; i < n; i++ ){
-                // what is happening on 6 polygon, js reads the same value!?
                 pos += read_geom( wkb, pos, &polygons[i] );
                 // printf( "%i -> poly done pos: %d \n", i, pos );
-                // TODO: now to return the value, see how to do it over emscripten
             }
+            ngeo = n;
 
-        // ok this can be used here!!!!
-            // so plan would be to return reference to first doulbe array, but length is then questionable?
-        // double* tst = malloc( sizeof(double) );
-        // *tst = -3.14;
-        // return tst;
-
+        // prepare for return
         // printf( "Returning the value of: %g\n", *(polygons[0].rings[0] + 0) );
-        // return polygons[0].rings[0];
-        // return 0;
-        free( polygons );
-        
+        printf( "The address to be expected %i\n", &polygons[0] );
+        geomloc = &polygons[0];
+
         break;
     }
 
-    int[] ret = {1,2,4};
-        return ret;
-
-    // return 0;
+    return ngeo;
 }

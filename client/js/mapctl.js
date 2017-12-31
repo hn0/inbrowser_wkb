@@ -56,6 +56,17 @@
                             })
                         });
 
+                        map.on( 'click', function( evt ){ 
+                            var features = map.getFeaturesAtPixel( evt.pixel );
+                            if( features ){
+                                features.forEach( function(f) {
+                                    var id = f.getProperties().id;
+                                    window.mapctl.log( 'You have clicked on feature with ID: ' + id );
+                                    console.log( 'You have clicked on feature with ID: ',  id );
+                                } );
+                            }
+                        });
+
                     }.bind( this ))
                     .catch(function(ex) { 
                         this.log( 'Response form server took: ' + (performance.now() - this.requests[type]) + 'ms; status error' );
@@ -97,35 +108,40 @@
             if( buf[1] ){
                 
                 var id = buf[0];
-                var wkb = data.slice( i, i+buf[1] );
 
                 console.log( 'wasam start' );
 
-                var arr = new Uint8Array( wkb );
-                var wa_buff = Module._malloc( wkb.byteLength );
+                var arr = new Uint8Array( data.slice( i, i+buf[1] ) );
+                var wa_buff = Module._malloc( arr.byteLength );
                 Module.writeArrayToMemory( arr, wa_buff );
                 var typ = Module.ccall( 'type', 'string', ['arraybuffer'], [wa_buff] );
-                
-                console.log( Module.ccall( 'convert', '', ['arraybuffer'], [wa_buff] ) );
 
-                var dw  = new DataView( wkb );
-                // test of n rings
-                // console.log( '23 coords in c, js val ->', dw.getUint32( 2080, true ) ); //wth, why this value is off
+                if( typ == 'multipolygon' ){
+
+                    var polyptr = Module._malloc( Uint8Array.BYTES_PER_ELEMENT )
+                    // make a room for pointer array, but what this array will point to?!
+                    // let say to ?! polygon object!? where
+                    var ngeo = Module.ccall( 'convert', 'number', ['arraybuffer', 'number*'], [wa_buff] );
 
 
-                // ok, js and c reads the same values!, there is something off in counting!
-                console.log( 'wasam end', typ );
+                    console.log( 'got back geometries count', ngeo, Module.HEAP8[ polyptr / Uint8Array.BYTES_PER_ELEMENT ] );
 
-                // wkb.parse( data.slice( i, i + buf[1] ) );
-                // if( wkb.type == 'multipolygon' ){
-                //     var f = new ol.Feature({
-                //         id: id,
-                //         geometry: new ol.geom.MultiPolygon( wkb.coords )
-                //     });
-                //     ret.push( f );
-                // }
-                // console.log( id, wkb.type, wkb.coords );
-                Module._free( buf );
+                    // wkb.parse( data.slice( i, i + buf[1] ) );
+                    // if( wkb.type == 'multipolygon' ){
+                    //     var f = new ol.Feature({
+                    //         id: id,
+                    //         geometry: new ol.geom.MultiPolygon( wkb.coords )
+                    //     });
+                    //     ret.push( f );
+                    // }
+                    // console.log( id, wkb.type, wkb.coords );
+                    Module._free( polyptr );
+                }
+                else {
+                    console.warn( 'Experimental support is available for multipolygon geometry type only!' );
+                }
+
+                Module._free( wa_buff );
                 i += buf[1];
             }
             return ret; // debug
