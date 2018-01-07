@@ -75,7 +75,7 @@
                     .then(function() { 
                         this.log( 'Whole process took: ' + (performance.now() - this.requests[type]) + 'ms' );
                         this.requests[type] = null;
-                        console.log('finally call'); 
+                        // console.log('finally call'); 
                     }.bind( this ));
 
             }
@@ -101,56 +101,72 @@
     mapctl.prototype.parsewasm = function( data ){
         var ret = [];
         var wkb = wkb_format();
-        var i   = 0;
-        while( i < data.byteLength ){
-            var buf = new Uint32Array( data.slice( i, i+8 ) );
-            i += 8;
+        var pos   = 0;
+        while( pos < data.byteLength ){
+            var buf = new Uint32Array( data.slice( pos, pos+8 ) );
+            pos += 8;
             if( buf[1] ){
                 
                 var id = buf[0];
 
-                console.log( 'wasam start' );
+                // console.log( 'wasam start' );
 
-                var arr = new Uint8Array( data.slice( i, i+buf[1] ) );
+                var arr = new Uint8Array( data.slice( pos, pos+buf[1] ) );
                 var wa_buff = Module._malloc( arr.byteLength );
                 Module.writeArrayToMemory( arr, wa_buff );
-                var typ = Module.ccall( 'type', 'string', ['arraybuffer'], [wa_buff] );
+                var typ   = Module.ccall( 'type', 'string', ['arraybuffer'], [wa_buff] );
+                var ngeom = Module.ccall( 'geomN', 'number', ['arraybuffer'], [wa_buff] );
 
-                if( typ == 'multipolygon' ){
+                if( typ == 'multipolygon' && ngeom > 0){
 
-                    var polyptr = Module._malloc( Uint8Array.BYTES_PER_ELEMENT );
-                    console.log( 'polyptr init', polyptr )
-                    // make a room for pointer array, but what this array will point to?!
-                    // let say to ?! polygon object!? where
-                    var ngeo = Module.ccall( 'convert', 'number', ['arraybuffer', 'number'], [wa_buff] );
+                    // TODO: we will need array for floats as well!?
+                    var polyn = Module._malloc( Uint8Array.BYTES_PER_ELEMENT * ngeom );
+                    var rings = Module.ccall( 'convert', 'number', ['arraybuffer', 'arraybuffer'], [wa_buff, polyn]);
+                    if( rings ){
 
+                        var coords = new Array( ngeom );
+                        for( var i=0; i < ngeom; i++ ){
+                            // console.log('get method: ', Module.getValue( polyn + i, 'i8' ) );
+                            // console.log( i, '.direct heap method: ', Module.HEAP8[ (polyn + i) / Uint8Array.BYTES_PER_ELEMENT ]);
+                            var npts = Module.HEAP8[ (polyn + i) / Uint8Array.BYTES_PER_ELEMENT ];
+                            var ringptr = Module.HEAPU32[ (rings / Uint32Array.BYTES_PER_ELEMENT) + i ];
 
-                    // and this was bad idea!
-                    console.log( 'got the value:', polyptr )
-                    console.log( 'value from c:', Module.getValue( polyptr, 'i8') );
-                    // console.log( 'got back geometries count', ngeo, Module.HEAP8[ polyptr / Uint8Array.BYTES_PER_ELEMENT ] );
-                    // var tst = Module.HEAP8[ polyptr / Uint8Array.BYTES_PER_ELEMENT ];
-                    // console.log( 'and the float on passed value is ', Module.HEAPF64[ tst / Float64Array.BYTES_PER_ELEMENT ] )
+                            console.log( npts ); // ok npts is still a bit off!
+                            coords[i] = [ new Array( npts ) ];
+                            for( var j=0; j < 2 * npts; j+=2 ){
 
-                    // wkb.parse( data.slice( i, i + buf[1] ) );
-                    // if( wkb.type == 'multipolygon' ){
-                    //     var f = new ol.Feature({
-                    //         id: id,
-                    //         geometry: new ol.geom.MultiPolygon( wkb.coords )
-                    //     });
-                    //     ret.push( f );
-                    // }
-                    // console.log( id, wkb.type, wkb.coords );
-                    Module._free( polyptr );
+                                coords[i][0][j / 2] = [
+                                    Module.HEAPF64[ (ringptr / Float64Array.BYTES_PER_ELEMENT) + j ],
+                                    Module.HEAPF64[ (ringptr / Float64Array.BYTES_PER_ELEMENT) + j + 1 ]
+                                ];
+                                // console.log( 'first value:', Module.HEAPF64[ (ringptr / Float64Array.BYTES_PER_ELEMENT) + j ] );
+                                // console.log( 'first value:', Module.HEAPF64[ (ringptr / Float64Array.BYTES_PER_ELEMENT) + j + 1 ] );
+                            }
+
+                            //  WHEN READY TO DO!!!
+                            Module._free( ringptr );
+                        }
+                        
+                        console.log( coords );
+                        // now construct the feature
+                        var f = new ol.Feature({
+                            id: id,
+                            geometry: new ol.geom.MultiPolygon( coords )
+                        });
+                        ret.push( f );
+                    }
+                    
+                    Module._free( polyn );
+
                 }
                 else {
                     console.warn( 'Experimental support is available for multipolygon geometry type only!' );
                 }
 
                 Module._free( wa_buff );
-                i += buf[1];
+                pos  += buf[1];
             }
-            return ret; // debug
+            // return ret; // debug
         }
         return ret;
     };
@@ -191,7 +207,7 @@
                     });
                     ret.push( f );
                 }
-                console.log( id, wkb.type, wkb.coords );
+                // console.log( id, wkb.type, wkb.coords );
                 i += buf[1];
             }
         }

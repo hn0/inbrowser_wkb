@@ -16,11 +16,6 @@
 #include<emscripten.h>
 
 typedef unsigned long long uint;
-// actually we only need a double**!
-typedef struct Polygons {
-    double** rings;
-    int nrings;
-} Poly;
 
 void print2(double x)//print double x in binary
 {
@@ -40,7 +35,7 @@ void print2(double x)//print double x in binary
 }
 
 // need a pointer for the doubles and array len!?
-uint read_geom( unsigned char* wkb, uint pos, Poly* poly )
+uint read_geom( unsigned char* wkb, uint pos, int* ringsN, double** rings_ptr )
 {
     uint read = 1;
     int typ  = (int)wkb[pos+read];
@@ -49,13 +44,14 @@ uint read_geom( unsigned char* wkb, uint pos, Poly* poly )
             read += 4;
             uint n = (uint)wkb[pos+read] | ( (uint)wkb[pos+read+1] << 8) | ( (uint)wkb[pos+read+2] << 16) | ( (uint)wkb[pos+read+3] << 24); // n rings
             read += 4;
-            poly->rings = malloc( sizeof( double* ) * n );
+            // for this example size of rings is always the same! 1
+            // double** rings = malloc( sizeof( double* ) * n );
             for( int i=0; i < n; i++ ){
                 uint ncoord = (uint)wkb[pos+read] | ( (uint)wkb[pos+read+1] << 8) | ( (uint)wkb[pos+read+2] << 16) | ( (uint)wkb[pos+read+3] << 24); // n coords
                 read += 4;
                 double* coord = malloc( sizeof( double ) * ncoord * 2 );
-                poly->nrings = ncoord;
-                poly->rings[i] = coord;
+                *ringsN = ncoord;
+                *rings_ptr = &coord[0];
                 int cpos = -1;
                 for( int j=0; j < ncoord; j++ ){
                     // todo: push to double array
@@ -64,13 +60,13 @@ uint read_geom( unsigned char* wkb, uint pos, Poly* poly )
                     // printf("x: %g   y: %g\n", coord[cpos-1], coord[cpos]);
                     read += 16;
                 }
+                // printf( "expect return: %i \n",  &coord );
             }
             break;
         default:
             printf( "type %i and pos %llu\n", typ, pos );
             break;
     }
-
     return read;
 }
 
@@ -95,31 +91,30 @@ char* type( unsigned char* wkb )
     return "EMPTY";
 }
 
-// for test, same lousy algorithm for comparison sake will be used
-int convert( unsigned char* wkb, char* geomloc )
+int geomN(unsigned char* wkb)
 {
-    int ngeo = 0;
+    // printf( "Number of geoms is: %i\n", (int)wkb[1]);
+    return (int)wkb[5];
+}
+
+// geomcnt is properly allocated array!
+double** convert( unsigned char* wkb, char* geo_ring_cnt )
+{
     int pos  = 1;
     switch( (int)wkb[pos] ){
         case 6:
             pos += 4;
             uint n = (uint)wkb[pos];
             pos += 4;
-            // printf( "n poly %llu\n", n);
-            Poly* polygons = malloc( ngeo * sizeof *polygons );
+            double** rings = malloc( sizeof( double* ) * n );
             for( int i=0; i < n; i++ ){
-                pos += read_geom( wkb, pos, &polygons[i] );
+                pos += read_geom( wkb, pos, (int*) geo_ring_cnt, &rings[i] );
                 // printf( "%i -> poly done pos: %d \n", i, pos );
+                geo_ring_cnt++;
             }
-            ngeo = n;
-
-        // prepare for return
-        // printf( "Returning the value of: %g\n", *(polygons[0].rings[0] + 0) );
-        printf( "The address to be expected %i\n", &polygons[0] );
-        geomloc = &polygons[0];
-
+            return rings;
         break;
     }
 
-    return ngeo;
+    return NULL;
 }
