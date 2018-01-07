@@ -43,7 +43,7 @@ func GetConn(file string) *DB {
 func (db *DB) GetGeometry() (int, *model.Fields) {
 	names := []string{"ogc_fid", "GEOMETRY"}
 	fields := model.CreateFields(names)
-	(*fields)[0].AddConstraint("ogc_fid", "<", 3)
+	// (*fields)[0].AddConstraint("ogc_fid", "<", 3)
 	cnt := db.execSelect(fields)
 	return cnt, fields
 }

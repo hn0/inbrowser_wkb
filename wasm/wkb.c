@@ -35,7 +35,7 @@ void print2(double x)//print double x in binary
 }
 
 // need a pointer for the doubles and array len!?
-uint read_geom( unsigned char* wkb, uint pos, int* ringsN, double** rings_ptr )
+uint read_geom( unsigned char* wkb, uint pos, unsigned long* ringsN, double** rings_ptr )
 {
     uint read = 1;
     int typ  = (int)wkb[pos+read];
@@ -98,7 +98,7 @@ int geomN(unsigned char* wkb)
 }
 
 // geomcnt is properly allocated array!
-double** convert( unsigned char* wkb, char* geo_ring_cnt )
+double** convert( unsigned char* wkb, unsigned long* geo_ring_cnt )
 {
     int pos  = 1;
     switch( (int)wkb[pos] ){
@@ -108,7 +108,7 @@ double** convert( unsigned char* wkb, char* geo_ring_cnt )
             pos += 4;
             double** rings = malloc( sizeof( double* ) * n );
             for( int i=0; i < n; i++ ){
-                pos += read_geom( wkb, pos, (int*) geo_ring_cnt, &rings[i] );
+                pos += read_geom( wkb, pos, geo_ring_cnt, &rings[i] );
                 // printf( "%i -> poly done pos: %d \n", i, pos );
                 geo_ring_cnt++;
             }

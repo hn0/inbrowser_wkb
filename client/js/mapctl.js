@@ -120,7 +120,7 @@
                 if( typ == 'multipolygon' && ngeom > 0){
 
                     // TODO: we will need array for floats as well!?
-                    var polyn = Module._malloc( Uint8Array.BYTES_PER_ELEMENT * ngeom );
+                    var polyn = Module._malloc( Uint32Array.BYTES_PER_ELEMENT * ngeom );
                     var rings = Module.ccall( 'convert', 'number', ['arraybuffer', 'arraybuffer'], [wa_buff, polyn]);
                     if( rings ){
 
@@ -128,10 +128,10 @@
                         for( var i=0; i < ngeom; i++ ){
                             // console.log('get method: ', Module.getValue( polyn + i, 'i8' ) );
                             // console.log( i, '.direct heap method: ', Module.HEAP8[ (polyn + i) / Uint8Array.BYTES_PER_ELEMENT ]);
-                            var npts = Module.HEAP8[ (polyn + i) / Uint8Array.BYTES_PER_ELEMENT ];
+                            var npts = Module.HEAPU32[ (polyn / Uint32Array.BYTES_PER_ELEMENT) + i ];
                             var ringptr = Module.HEAPU32[ (rings / Uint32Array.BYTES_PER_ELEMENT) + i ];
 
-                            console.log( npts ); // ok npts is still a bit off!
+                            // console.log( npts ); // ok npts is still a bit off!
                             coords[i] = [ new Array( npts ) ];
                             for( var j=0; j < 2 * npts; j+=2 ){
 
@@ -143,11 +143,9 @@
                                 // console.log( 'first value:', Module.HEAPF64[ (ringptr / Float64Array.BYTES_PER_ELEMENT) + j + 1 ] );
                             }
 
-                            //  WHEN READY TO DO!!!
                             Module._free( ringptr );
                         }
                         
-                        console.log( coords );
                         // now construct the feature
                         var f = new ol.Feature({
                             id: id,
